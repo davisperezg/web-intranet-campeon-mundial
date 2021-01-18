@@ -39,7 +39,7 @@ import CitaForm from "./components/Cita/CitaForm";
 import NotasFormPM from "./components/NotasPracticasManejo/NotaFormPM";
 import Principal from "./components/Principal/Principal";
 
-axios.defaults.baseURL = `${process.env.REACT_APP_API}/`;
+//axios.defaults.baseURL = `${process.env.REACT_APP_API}/`;
 
 const PrivateRoute = ({ component, ...rest }: any) => {
   const routeComponent = (props: any) =>
