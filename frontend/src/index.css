@@ -1,0 +1,9 @@
+body{
+    background-color: #fafafa !important;
+}
+th{
+    text-align: center;
+}
+.table td, .table th{
+    padding:1px !important
+}

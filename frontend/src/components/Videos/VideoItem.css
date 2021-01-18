@@ -1,0 +1,12 @@
+.video-card:hover {
+  border: 1px solid #333;
+}
+.ytp-title-channel-logo{
+  display:none !important;
+}
+.ytp-title-channel{
+  display:none !important;
+}
+.ytp-title-enable-channel-logo .ytp-title-channel{
+  display: -webkit-box !important;
+}
