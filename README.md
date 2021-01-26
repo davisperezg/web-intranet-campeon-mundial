@@ -8,6 +8,7 @@ Sistema intranet. se implementó con el objetivo de optimizar el proceso de matr
 * Consulta Usuarios
 * Genera fichas de matricula, citas o reservas. 
 * Mantenimiento de alumnos, usuarios, notas, sedes y tramites.
+* Permsos para el acceso a intranet.
 
 # Herramientas utilizadas:
 
