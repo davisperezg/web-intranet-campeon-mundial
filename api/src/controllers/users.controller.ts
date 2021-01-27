@@ -17,21 +17,17 @@ export const listStudents: RequestHandler = async (req: any, res) => {
   const foundCantOfEnrolled = await Users.find({
     registrador: { $in: req.user.id },
   });
-  console.log(foundCantOfEnrolled);
   //termina la lista de quien registro a este cliente
 
   const getUsersXStudents: any = await Users.find({
     roles: { $in: _id },
-  })
-    .populate([{ path: "sedes" }])
-    .populate([{ path: "tramites" }]);
+  }).populate([{ path: "sedes" }]);
   res.status(200).json(getUsersXStudents);
 };
 
 export const getStudent: RequestHandler = async (req, res) => {
   const userFound = await Users.findById(req.params.id).populate([
     { path: "sedes" },
-    { path: "tramites" },
   ]);
 
   if (!userFound) return res.status(204).json();
@@ -41,7 +37,6 @@ export const getStudent: RequestHandler = async (req, res) => {
 
 //registra alumnos o estudiantes
 export const newStudent: RequestHandler = async (req, res) => {
-  console.log(req.body);
   const {
     password,
     dni,
@@ -54,7 +49,7 @@ export const newStudent: RequestHandler = async (req, res) => {
     startClasses,
     endClasses,
     sedes, //si existe sede busca nombre, si no existe sede Huacho por defecto
-    tramites,
+    //tramites,
     registrador,
   } = req.body;
 
@@ -92,8 +87,8 @@ export const newStudent: RequestHandler = async (req, res) => {
     newStudent.sedes = [sedes!._id];
   }
 
-  const foundTramites = await Tramite.find({ name: { $in: tramites } });
-  newStudent.tramites = foundTramites.map((tramite) => tramite._id);
+  //const foundTramites = await Tramite.find({ name: { $in: tramites } });
+  //newStudent.tramites = foundTramites.map((tramite) => tramite._id);
   //buscar la sede del alumno y acutliza sus nro de matricula
 
   const getNumberMatricula = <any>await Sedes.findOne({
@@ -118,9 +113,9 @@ export const newStudent: RequestHandler = async (req, res) => {
   //fin de buscar y actualizar sus numero de ficha
 
   try {
-    await newStudent.save();
+    const dataRegistro = await newStudent.save();
     await incNumSeqSede();
-    res.status(200).json({ message: "Estudiante creado" });
+    res.status(200).json(dataRegistro);
   } catch (e) {
     console.log(e);
     return res.status(400).json(e);
@@ -131,13 +126,10 @@ export const updateStudent: RequestHandler = async (
   res
 ): Promise<Response> => {
   //buscar al usuario por params id
-  const userFound: any = await Users.findById(req.params.id).populate(
-    "tramites",
-    "name"
-  );
+  const userFound: any = await Users.findById(req.params.id);
   //despejo roles y password para validar
   //console.log(req.body);
-  const { tramites, password } = req.body;
+  const { password } = req.body;
   if (password) {
     //encriptamos la contrasenia almacenando en una variable y
     //pasamos como parametro el password del body
@@ -190,24 +182,6 @@ export const updateStudent: RequestHandler = async (
     }
   }
 
-  const { user }: any = req;
-  const { role }: any = user;
-
-  if (role === "Admin" && tramites !== userFound.tramites[0].name) {
-    return res.status(404).json({
-      message: "No tiene permiso",
-    });
-  }
-
-  const foundTramite: any = await Tramite.findOne({
-    name: { $in: req.body.tramites },
-  });
-  req.body.tramites = foundTramite._id;
-  //validamos por si quieren poner forzosamente el rol id del admin
-  //if (roles === "5fe50fd11d140e2b20db89e6" || roles === "5fe50fd11d140e2b20db89e6")
-  //seteamos el campo roles al usuario normal -> Alumno
-  //  req.body.roles = "5fe50fd11d140e2b20db89e7";
-  //almacenamos los nuevos datos cambiados
   const userUpdate = await Users.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
   });

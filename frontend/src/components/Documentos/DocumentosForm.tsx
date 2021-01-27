@@ -14,6 +14,7 @@ import moment from "moment";
 import { GoSync } from "react-icons/go";
 import { UserContext } from "../Context/UserContext";
 import { confirmAlert } from "react-confirm-alert"; // Import
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
@@ -100,6 +101,11 @@ const DocumentosForm = (props: Props) => {
     loadDocumentos();
     if (params.iddocumento) getDocumento(params.iddocumento);
   }, [params.iddocumento]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
+
   return (
     <>
       <div className="col-md-12">

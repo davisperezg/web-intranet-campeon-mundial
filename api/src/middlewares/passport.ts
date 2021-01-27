@@ -8,7 +8,6 @@ const opts: StrategyOptions = {
 };
 
 export default new Strategy(opts, async (payload, done) => {
-  //console.log(payload);
   const userFound: any = await Users.findOne({
     _id: payload.id,
   }).populate("roles");
@@ -17,19 +16,16 @@ export default new Strategy(opts, async (payload, done) => {
     id: userFound._id,
     username: userFound.username,
     nombres: userFound.nombres,
-    //email: userFound.email,
+    email: userFound.email,
     role: userFound.roles[0].name,
     nivel: userFound.nivel,
     estado: userFound.estado,
   };
 
-  //console.log(data);
-  try {
-    if (userFound) {
-      return done(null, data);
-    }
-    done(null, false);
-  } catch (e) {
-    console.log(e);
+  let expirationDate = new Date(payload.exp * 1000);
+  if (expirationDate < new Date()) {
+    return done(null, false);
   }
+  let user = data;
+  done(null, user);
 });

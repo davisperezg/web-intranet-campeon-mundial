@@ -2,6 +2,10 @@ import { Schema, model } from "mongoose";
 
 const pagosSchema = new Schema(
   {
+    nuevoMonto: {
+      type: Number,
+      default: 0,
+    },
     cantidad: {
       type: Number,
     },
@@ -36,7 +40,13 @@ const pagosSchema = new Schema(
     },
     confirm: {
       type: Number,
-      default: 0,
+      requerid: true,
+    },
+    stateRenta: {
+      type: Boolean,
+    },
+    acuenta: {
+      type: Number,
     },
   },
   {

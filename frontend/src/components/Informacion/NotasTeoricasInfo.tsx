@@ -5,6 +5,7 @@ import * as notasService from "../Notas/NotasService";
 import { UserContext } from "../Context/UserContext";
 import InfoNotaAlumnoItem from "./NotasTeoriasItem";
 import InfoNotaAlumnoItemSegundaOportunidad from "./NotasTeoriasItemSegundaOportunidad";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 interface Props {
   setActivatePrincipal: (statud: boolean) => void;
@@ -53,6 +54,11 @@ const InfoNotasTeoricas = (props: Props) => {
     //loadPromedio();
   }, [loadDataAlumno, loadDataAlumnoSegundaOportunidad]);
   //loadPromedio
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
+
   return (
     <>
       <div className="row">

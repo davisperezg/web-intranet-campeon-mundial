@@ -10,6 +10,7 @@ import {
 import * as authCtrl from "../controllers/auth.controller";
 
 router.post("/v1/auth/signIn", authCtrl.signIn);
+router.post("/v1/auth/token", authCtrl.token);
 
 router.get(
   "/v1/auth/user",

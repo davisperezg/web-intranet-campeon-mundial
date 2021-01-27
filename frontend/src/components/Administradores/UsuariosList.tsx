@@ -1,14 +1,17 @@
-import React, { useState, useEffect, KeyboardEvent } from "react";
+import React, { useState, useEffect, useContext, KeyboardEvent } from "react";
 import { Alumno } from "../Alumnos/Alumno";
 import { useHistory } from "react-router-dom";
 import * as adminService from "./UsuariosService";
 import AdminItem from "./UsuariosItem";
+import MostarSesionTerminada from "../lib/SesionTerminada";
+import { UserContext } from "../Context/UserContext";
 
 const AdministradoresList = () => {
   const [loading, setLoading] = useState(true);
   const [admins, setAdmin] = useState<Alumno[]>([]);
   const history = useHistory();
   const [totalUsuarios, setTotalUsuarios] = useState<Number>(0);
+  const { userData, setUserData }: any = useContext(UserContext);
 
   const loadAdmin = async () => {
     const res = await adminService.getAdministradores();
@@ -70,6 +73,10 @@ const AdministradoresList = () => {
   useEffect(() => {
     loadAdmin();
   }, []);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   if (loading)
     return (

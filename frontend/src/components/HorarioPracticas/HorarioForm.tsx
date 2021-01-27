@@ -17,6 +17,7 @@ import PracticasItem from "./PracticaItem";
 import { UserContext } from "../Context/UserContext";
 import moment from "moment";
 import { GoSync } from "react-icons/go";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 type SelectChange = ChangeEvent<HTMLSelectElement>;
@@ -121,6 +122,10 @@ const HorarioForm = () => {
       loadAlumno();
     }
   }, [params.id, practicas.estudiante, loadAlumno, loadPracticas]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   return (
     <>

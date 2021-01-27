@@ -8,6 +8,7 @@ import * as pagoService from "./PagosService";
 import { numberFormat } from "../lib/index";
 import { UserContext } from "../Context/UserContext";
 import { BiMessageDetail } from "react-icons/bi";
+import { PagoContext } from "../Context/PagoContext";
 
 interface Props {
   pago: Pagos;
@@ -17,6 +18,8 @@ interface Props {
 
 const PagosItem = (props: Props) => {
   const { userData }: any = useContext(UserContext);
+  const { edit, setEdit }: any = useContext(PagoContext);
+
   const { pago, id, loadPagos }: any = props;
   const history = useHistory();
   const handleDelete = async (id: string) => {
@@ -48,8 +51,19 @@ const PagosItem = (props: Props) => {
   return (
     <>
       <tr key={pago._id}>
-        <th>{numberFormat(pago.cantidad)}</th>
-        <td>{pago.nroRecibo}</td>
+        <td>{pago.tramites.name}</td>
+        <td>{pago.cantidad}</td>
+        <td>{numberFormat(pago.tramites.costo)}</td>
+        <td>{numberFormat(pago.tramites.costo * pago.cantidad)}</td>
+        <th>
+          {pago.stateRenta ? numberFormat(pago.acuenta) : "PAGO COMPLETO"}
+        </th>
+        <th>
+          {pago.stateRenta
+            ? numberFormat(pago.tramites.costo * pago.cantidad - pago.acuenta)
+            : "NO DEBE"}
+        </th>
+        <th>{Number(pago.nroRecibo)}</th>
         <td>{moment(pago.createdAt).format("DD/MM/YYYY")}</td>
         <td>{pago.registrador.nombres}</td>
         {userData.role === "Super Admin" ? (
@@ -68,6 +82,7 @@ const PagosItem = (props: Props) => {
             <>
               <BiMessageDetail
                 onClick={() => {
+                  setEdit(false);
                   history.push(`/alumnos/pagos/${id}/pago/${pago._id}`);
                 }}
                 style={{
@@ -76,13 +91,25 @@ const PagosItem = (props: Props) => {
                   fontSize: "17px",
                 }}
               />
+              <GoPencil
+                onClick={() => {
+                  setEdit(true);
+                  history.push(`/alumnos/pagos/${id}/pago/${pago._id}`);
+                }}
+                style={{
+                  cursor: "pointer",
+                  fontSize: "17px",
+                  marginLeft: "5px",
+                }}
+              />
             </>
           ) : (
             <>
               <GoPencil
-                onClick={() =>
-                  history.push(`/alumnos/pagos/${id}/pago/${pago._id}`)
-                }
+                onClick={() => {
+                  setEdit(true);
+                  history.push(`/alumnos/pagos/${id}/pago/${pago._id}`);
+                }}
                 style={{
                   marginLeft: "5px",
                   cursor: "pointer",

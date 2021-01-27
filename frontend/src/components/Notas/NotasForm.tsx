@@ -3,6 +3,7 @@ import React, {
   useState,
   FormEvent,
   ChangeEvent,
+  useContext,
   useCallback,
 } from "react";
 import * as notasService from "../Notas/NotasService";
@@ -13,6 +14,8 @@ import { NotasTeoricas } from "./NotasTeoricas";
 import { confirmAlert } from "react-confirm-alert"; // Import
 import NotaAlumnoItem from "./NotaAlumnoItem";
 import NotaAlumnoItemS from "./NotaAlumnoItemS";
+import MostarSesionTerminada from "./../lib/SesionTerminada";
+import { UserContext } from "../Context/UserContext";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 type SelectChange = ChangeEvent<HTMLSelectElement>;
@@ -23,6 +26,7 @@ const NotasForm = () => {
     nota: 35,
     estudiante: "NOSELECT",
   };
+  const { userData, setUserData }: any = useContext(UserContext);
 
   const [alumnos, setAlumnos] = useState<Alumno[]>([]);
   const [notas, setNotas] = useState<NotasTeoricas[]>([]);
@@ -45,8 +49,12 @@ const NotasForm = () => {
   //}, [nota.estudiante]);
 
   const loadAlumnos = async () => {
-    const res = await notasService.getAlumnos();
-    setAlumnos(res.data);
+    try {
+      const res = await notasService.getAlumnos();
+      setAlumnos(res.data);
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   const loadAlumno = useCallback(async () => {
@@ -184,6 +192,10 @@ const NotasForm = () => {
     //loadPromedio,
     loadAlumno,
   ]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   return (
     <>

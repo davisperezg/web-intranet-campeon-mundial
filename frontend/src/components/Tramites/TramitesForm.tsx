@@ -1,9 +1,17 @@
-import React, { ChangeEvent, useState, useEffect, FormEvent } from "react";
+import React, {
+  ChangeEvent,
+  useState,
+  useContext,
+  useEffect,
+  FormEvent,
+} from "react";
 import { useHistory, useParams } from "react-router-dom";
 import { GoArrowLeft } from "react-icons/go";
 import { Tramites } from "./Tramites";
 import * as tramitesService from "./TramiteService";
 import { toast } from "react-toastify";
+import MostarSesionTerminada from "./../lib/SesionTerminada";
+import { UserContext } from "../Context/UserContext";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
@@ -17,12 +25,17 @@ const TramiteForm = () => {
     costo: "",
   };
   const [tramite, setTramite]: any = useState<Tramites>(initialState);
+  const { userData, setUserData }: any = useContext(UserContext);
 
   const history = useHistory();
   const params: any = useParams<Params>();
   const getTramite = async (id: string) => {
-    const res = await tramitesService.getTramiteById(id);
-    setTramite(res.data);
+    try {
+      const res = await tramitesService.getTramiteById(id);
+      setTramite(res.data);
+    } catch (e) {
+      console.log(e);
+    }
   };
   const handleInputChange = (e: InputChange) =>
     setTramite({ ...tramite, [e.target.name]: e.target.value });
@@ -51,6 +64,11 @@ const TramiteForm = () => {
   useEffect(() => {
     if (params.id) getTramite(params.id);
   }, [params.id]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
+
   return (
     <>
       <div className="row">

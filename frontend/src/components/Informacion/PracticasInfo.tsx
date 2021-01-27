@@ -4,6 +4,7 @@ import PracticasItem from "./../HorarioPracticas/PracticaItem";
 import { Practicas } from "./../HorarioPracticas/Practicas";
 import * as practicasService from "../HorarioPracticas/PracticasService";
 import { UserContext } from "../Context/UserContext";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 interface Props {
   setActivatePrincipal: (statud: boolean) => void;
@@ -23,6 +24,10 @@ const InfoPractica = (props: Props) => {
   useEffect(() => {
     loadPracticas();
   }, [loadPracticas]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   return (
     <>

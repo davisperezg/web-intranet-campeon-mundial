@@ -1,15 +1,25 @@
-import React, { useState, useEffect, ChangeEvent, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  ChangeEvent,
+  useCallback,
+} from "react";
 import { Pagos } from "./../Pagos/Pagos";
 import { Egresos } from "./../Egreso/Egresos";
 import { CajaIngreso, CajaEgreso } from "./CajaItem";
 import * as cajaService from "./CajaService";
 import { numberFormat } from "../lib/index";
+import { UserContext } from "../Context/UserContext";
+
 import moment from "moment";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 type SelectChange = ChangeEvent<HTMLSelectElement>;
 
 const CajaList = () => {
+  const { userData, setUserData }: any = useContext(UserContext);
   const [listIngresos, setListIngresos] = useState<Pagos[]>([]);
   const [listEgresos, setListEgresos] = useState<Egresos[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +29,7 @@ const CajaList = () => {
     huacho: "",
     huaral: "",
     barranca: "",
+    deudores: "",
   });
   var f = new Date();
   var fechaActual =
@@ -76,579 +87,933 @@ const CajaList = () => {
     setListIngresos(listRange);
     setListEgresos(listRangeEgreso);
   };
+
   const loadFiltro = useCallback(async () => {
     const res = await cajaService.getIngresos();
     const resEgreso = await cajaService.getEgresos();
-
-    if (
-      Boolean(filtro.huacho) === true &&
-      Boolean(filtro.huaral) === true &&
-      Boolean(filtro.barranca) === true
-    ) {
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (ingreso.sedes.name === "Huacho" ||
-              ingreso.sedes.name === "Huaral" ||
-              ingreso.sedes.name === "Barranca")
-          : //ingreso.sedes.name === "Barranca"
-            ingreso.sedes.name === "Huacho" ||
-            ingreso.sedes.name === "Huaral" ||
-            ingreso.sedes.name === "Barranca"
-      );
-      console.log(ingresos);
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
-
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
-
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (egreso.sedes.name === "Huacho" ||
-              egreso.sedes.name === "Huaral" ||
-              egreso.sedes.name === "Barranca")
-          : egreso.sedes.name === "Huacho" ||
-            egreso.sedes.name === "Huaral" ||
-            egreso.sedes.name === "Barranca"
-      );
-
-      setListEgresos(egresos);
-
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (
-      Boolean(filtro.huacho) === true &&
-      Boolean(filtro.barranca) === true &&
-      Boolean(filtro.huaral) === true
-    ) {
-      console.log("huacho huaral barrancax2");
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (ingreso.sedes.name === "Huacho" ||
-              ingreso.sedes.name === "Barranca" ||
-              ingreso.sedes.name === "Huaral")
-          : ingreso.sedes.name === "Huacho" ||
-            ingreso.sedes.name === "Barranca" ||
-            ingreso.sedes.name === "Huaral"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
-
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
-
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (egreso.sedes.name === "Huacho" ||
-              egreso.sedes.name === "Barranca" ||
-              egreso.sedes.name === "Huaral")
-          : egreso.sedes.name === "Huacho" ||
-            egreso.sedes.name === "Barranca" ||
-            egreso.sedes.name === "Huaral"
-      );
-
-      setListEgresos(egresos);
-
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (
-      Boolean(filtro.huaral) === true &&
-      Boolean(filtro.huacho) === true &&
-      Boolean(filtro.barranca) === true
-    ) {
-      console.log("huacho huaral barrancax3");
-
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (ingreso.sedes.name === "Huaral" ||
+    if (Boolean(filtro.deudores) === true) {
+      if (
+        Boolean(filtro.deudores) === true &&
+        Boolean(filtro.huacho) === true &&
+        Boolean(filtro.huaral) === true &&
+        Boolean(filtro.barranca) === true
+      ) {
+        setListEgresos([]);
+        setEgresoTotal(0);
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huacho" ||
+                ingreso.sedes.name === "Huaral" ||
+                ingreso.sedes.name === "Barranca") &&
+              ingreso.stateRenta == true
+            : //ingreso.sedes.name === "Barranca"
               ingreso.sedes.name === "Huacho" ||
-              ingreso.sedes.name === "Barranca")
-          : ingreso.sedes.name === "Huaral" ||
-            ingreso.sedes.name === "Huacho" ||
-            ingreso.sedes.name === "Barranca"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
-
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
-
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (egreso.sedes.name === "Huaral" ||
-              egreso.sedes.name === "Huacho" ||
-              egreso.sedes.name === "Barranca")
-          : egreso.sedes.name === "Huaral" ||
-            egreso.sedes.name === "Huacho" ||
-            egreso.sedes.name === "Barranca"
-      );
-
-      setListEgresos(egresos);
-
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (
-      Boolean(filtro.huaral) === true &&
-      Boolean(filtro.barranca) === true &&
-      Boolean(filtro.huacho) === true
-    ) {
-      console.log("huacho huaral barrancax4");
-
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (ingreso.sedes.name === "Huaral" ||
-              ingreso.sedes.name === "Barranca" ||
-              ingreso.sedes.name === "Huacho")
-          : ingreso.sedes.name === "Huaral" ||
-            ingreso.sedes.name === "Barranca" ||
-            ingreso.sedes.name === "Huacho"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
-
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
-
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (egreso.sedes.name === "Huaral" ||
-              egreso.sedes.name === "Barranca" ||
-              egreso.sedes.name === "Huacho")
-          : egreso.sedes.name === "Huaral" ||
-            egreso.sedes.name === "Barranca" ||
-            egreso.sedes.name === "Huacho"
-      );
-
-      setListEgresos(egresos);
-
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (
-      Boolean(filtro.barranca) === true &&
-      Boolean(filtro.huaral) === true &&
-      Boolean(filtro.huacho) === true
-    ) {
-      console.log("huacho huaral barrancax5");
-
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (ingreso.sedes.name === "Barranca" ||
               ingreso.sedes.name === "Huaral" ||
-              ingreso.sedes.name === "Huacho")
-          : ingreso.sedes.name === "Barranca" ||
-            ingreso.sedes.name === "Huaral" ||
-            ingreso.sedes.name === "Huacho"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
+              (ingreso.sedes.name === "Barranca" && ingreso.stateRenta == true)
+        );
 
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
 
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (egreso.sedes.name === "Barranca" ||
-              egreso.sedes.name === "Huaral" ||
-              egreso.sedes.name === "Huacho")
-          : egreso.sedes.name === "Barranca" ||
-            egreso.sedes.name === "Huaral" ||
-            egreso.sedes.name === "Huacho"
-      );
+        const deuda = ingresos
+          .map((debe: any) =>
+            debe.stateRenta
+              ? debe.tramites.costo * debe.cantidad - debe.acuenta
+              : 0
+          )
+          .reduce((a: any, b: any) => a + b, 0);
 
-      setListEgresos(egresos);
+        setIngresoTotal(deuda);
+      } else if (
+        Boolean(filtro.deudores) === true &&
+        Boolean(filtro.barranca) === true &&
+        Boolean(filtro.huacho) === true
+      ) {
+        setListEgresos([]);
+        setEgresoTotal(0);
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huacho" ||
+                ingreso.sedes.name === "Barranca") &&
+              ingreso.stateRenta == true
+            : ingreso.sedes.name === "Huacho" ||
+              (ingreso.sedes.name === "Barranca" && ingreso.stateRenta == true)
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
 
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (
-      Boolean(filtro.barranca) === true &&
-      Boolean(filtro.huacho) === true &&
-      Boolean(filtro.huaral) === true
-    ) {
-      console.log("huacho huaral barrancax6");
+        const deuda = ingresos
+          .map((debe: any) =>
+            debe.stateRenta
+              ? debe.tramites.costo * debe.cantidad - debe.acuenta
+              : 0
+          )
+          .reduce((a: any, b: any) => a + b, 0);
 
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (ingreso.sedes.name === "Barranca" ||
-              ingreso.sedes.name === "Huacho" ||
-              ingreso.sedes.name === "Huaral")
-          : ingreso.sedes.name === "Barranca" ||
-            ingreso.sedes.name === "Huacho" ||
-            ingreso.sedes.name === "Huaral"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
+        setIngresoTotal(deuda);
+      } else if (
+        Boolean(filtro.deudores) === true &&
+        Boolean(filtro.huacho) === true &&
+        Boolean(filtro.huaral) === true
+      ) {
+        setListEgresos([]);
+        setEgresoTotal(0);
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huaral" ||
+                ingreso.sedes.name === "Huacho") &&
+              ingreso.stateRenta == true
+            : ingreso.sedes.name === "Huaral" ||
+              (ingreso.sedes.name === "Huacho" && ingreso.stateRenta == true)
+        );
 
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
 
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (egreso.sedes.name === "Barranca" ||
-              egreso.sedes.name === "Huacho" ||
-              egreso.sedes.name === "Huaral")
-          : egreso.sedes.name === "Barranca" ||
-            egreso.sedes.name === "Huacho" ||
-            egreso.sedes.name === "Huaral"
-      );
+        const deuda = ingresos
+          .map((debe: any) =>
+            debe.stateRenta
+              ? debe.tramites.costo * debe.cantidad - debe.acuenta
+              : 0
+          )
+          .reduce((a: any, b: any) => a + b, 0);
 
-      setListEgresos(egresos);
+        setIngresoTotal(deuda);
+      } else if (
+        Boolean(filtro.deudores) === true &&
+        Boolean(filtro.barranca) === true &&
+        Boolean(filtro.huacho) === true
+      ) {
+        setListEgresos([]);
+        setEgresoTotal(0);
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huacho" ||
+                ingreso.sedes.name === "Barranca") &&
+              ingreso.stateRenta == true
+            : ingreso.sedes.name === "Huacho" ||
+              (ingreso.sedes.name === "Barranca" && ingreso.stateRenta == true)
+        );
 
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (
-      Boolean(filtro.huacho) === true &&
-      Boolean(filtro.huaral) === true
-    ) {
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (ingreso.sedes.name === "Huacho" || ingreso.sedes.name === "Huaral")
-          : ingreso.sedes.name === "Huacho" || ingreso.sedes.name === "Huaral"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
 
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
+        const deuda = ingresos
+          .map((debe: any) =>
+            debe.stateRenta
+              ? debe.tramites.costo * debe.cantidad - debe.acuenta
+              : 0
+          )
+          .reduce((a: any, b: any) => a + b, 0);
 
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (egreso.sedes.name === "Huacho" || egreso.sedes.name === "Huaral")
-          : egreso.sedes.name === "Huacho" || egreso.sedes.name === "Huaral"
-      );
+        setIngresoTotal(deuda);
+      } else if (
+        Boolean(filtro.deudores) === true &&
+        Boolean(filtro.barranca) === true &&
+        Boolean(filtro.huaral) === true
+      ) {
+        setListEgresos([]);
+        setEgresoTotal(0);
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huaral" ||
+                ingreso.sedes.name === "Barranca") &&
+              ingreso.stateRenta == true
+            : ingreso.sedes.name === "Huaral" ||
+              (ingreso.sedes.name === "Barranca" && ingreso.stateRenta == true)
+        );
 
-      setListEgresos(egresos);
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
 
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (
-      Boolean(filtro.huacho) === true &&
-      Boolean(filtro.barranca) === true
-    ) {
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (ingreso.sedes.name === "Huacho" ||
-              ingreso.sedes.name === "Barranca")
-          : ingreso.sedes.name === "Huacho" || ingreso.sedes.name === "Barranca"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
+        const deuda = ingresos
+          .map((debe: any) =>
+            debe.stateRenta
+              ? debe.tramites.costo * debe.cantidad - debe.acuenta
+              : 0
+          )
+          .reduce((a: any, b: any) => a + b, 0);
 
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
+        setIngresoTotal(deuda);
+      } else if (
+        Boolean(filtro.deudores) === true &&
+        Boolean(filtro.barranca) === true
+      ) {
+        console.log(filtro.deudores);
+        console.log(filtro.barranca);
+        console.log(filtro.huacho);
+        setListEgresos([]);
+        setEgresoTotal(0);
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              ingreso.sedes.name === "Barranca" &&
+              ingreso.stateRenta == true
+            : //ingreso.sedes.name === "Barranca"
+              ingreso.sedes.name === "Ba rranca" && ingreso.stateRenta == true
+        );
 
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (egreso.sedes.name === "Huacho" || egreso.sedes.name === "Barranca")
-          : egreso.sedes.name === "Huacho" || egreso.sedes.name === "Barranca"
-      );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
 
-      setListEgresos(egresos);
+        const deuda = ingresos
+          .map((debe: any) =>
+            debe.stateRenta
+              ? debe.tramites.costo * debe.cantidad - debe.acuenta
+              : 0
+          )
+          .reduce((a: any, b: any) => a + b, 0);
 
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (
-      Boolean(filtro.huaral) === true &&
-      Boolean(filtro.huacho) === true
-    ) {
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (ingreso.sedes.name === "Huaral" || ingreso.sedes.name === "Huacho")
-          : ingreso.sedes.name === "Huaral" || ingreso.sedes.name === "Huacho"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
+        setIngresoTotal(deuda);
+      } else if (
+        Boolean(filtro.deudores) === true &&
+        Boolean(filtro.huaral) === true
+      ) {
+        setListEgresos([]);
+        setEgresoTotal(0);
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              ingreso.sedes.name === "Huaral" &&
+              ingreso.stateRenta == true
+            : ingreso.sedes.name === "Huaral" && ingreso.stateRenta == true
+        );
 
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
 
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (egreso.sedes.name === "Huaral" || egreso.sedes.name === "Huacho")
-          : egreso.sedes.name === "Huaral" || egreso.sedes.name === "Huacho"
-      );
+        const deuda = ingresos
+          .map((debe: any) =>
+            debe.stateRenta
+              ? debe.tramites.costo * debe.cantidad - debe.acuenta
+              : 0
+          )
+          .reduce((a: any, b: any) => a + b, 0);
 
-      setListEgresos(egresos);
+        setIngresoTotal(deuda);
+      } else if (
+        Boolean(filtro.deudores) === true &&
+        Boolean(filtro.huacho) === true
+      ) {
+        setListEgresos([]);
+        setEgresoTotal(0);
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              ingreso.sedes.name === "Huacho" &&
+              ingreso.stateRenta == true
+            : ingreso.sedes.name === "Huacho" && ingreso.stateRenta == true
+        );
 
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (
-      Boolean(filtro.huaral) === true &&
-      Boolean(filtro.barranca) === true
-    ) {
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (ingreso.sedes.name === "Huaral" ||
-              ingreso.sedes.name === "Barranca")
-          : ingreso.sedes.name === "Huaral" || ingreso.sedes.name === "Barranca"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
 
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
+        const deuda = ingresos
+          .map((debe: any) =>
+            debe.stateRenta
+              ? debe.tramites.costo * debe.cantidad - debe.acuenta
+              : 0
+          )
+          .reduce((a: any, b: any) => a + b, 0);
 
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (egreso.sedes.name === "Huaral" || egreso.sedes.name === "Barranca")
-          : egreso.sedes.name === "Huaral" || egreso.sedes.name === "Barranca"
-      );
+        setIngresoTotal(deuda);
+      } else {
+        setListEgresos([]);
+        setEgresoTotal(0);
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huaral" ||
+                ingreso.sedes.name === "Barranca" ||
+                ingreso.sedes.name === "Huacho") &&
+              ingreso.stateRenta == true
+            : ingreso.sedes.name === "Huaral" ||
+              ingreso.sedes.name === "Barranca" ||
+              (ingreso.sedes.name === "Huacho" && ingreso.stateRenta == true)
+        );
 
-      setListEgresos(egresos);
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
 
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (
-      Boolean(filtro.barranca) === true &&
-      Boolean(filtro.huacho) === true
-    ) {
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (ingreso.sedes.name === "Barranca" ||
-              ingreso.sedes.name === "Huacho")
-          : ingreso.sedes.name === "Barranca" || ingreso.sedes.name === "Huacho"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
+        const deuda = ingresos
+          .map((debe: any) =>
+            debe.stateRenta
+              ? debe.tramites.costo * debe.cantidad - debe.acuenta
+              : 0
+          )
+          .reduce((a: any, b: any) => a + b, 0);
 
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
-
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (egreso.sedes.name === "Barranca" || egreso.sedes.name === "Huacho")
-          : egreso.sedes.name === "Barranca" || egreso.sedes.name === "Huacho"
-      );
-
-      setListEgresos(egresos);
-
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (
-      Boolean(filtro.barranca) === true &&
-      Boolean(filtro.huaral) === true
-    ) {
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (ingreso.sedes.name === "Barranca" ||
-              ingreso.sedes.name === "Huaral")
-          : ingreso.sedes.name === "Barranca" || ingreso.sedes.name === "Huaral"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
-
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
-
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            (egreso.sedes.name === "Barranca" || egreso.sedes.name === "Huaral")
-          : egreso.sedes.name === "Barranca" || egreso.sedes.name === "Huaral"
-      );
-
-      setListEgresos(egresos);
-
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (Boolean(filtro.huacho) === true) {
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            ingreso.sedes.name === "Huacho"
-          : ingreso.sedes.name === "Huacho"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
-
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
-
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            egreso.sedes.name === "Huacho"
-          : egreso.sedes.name === "Huacho"
-      );
-
-      setListEgresos(egresos);
-
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (Boolean(filtro.huaral) === true) {
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            ingreso.sedes.name === "Huaral"
-          : ingreso.sedes.name === "Huaral"
-      );
-
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
-
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
-
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            egreso.sedes.name === "Huaral"
-          : egreso.sedes.name === "Huaral"
-      );
-
-      setListEgresos(egresos);
-
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
-    } else if (Boolean(filtro.barranca) === true) {
-      const ingresos: any = res.data.filter((ingreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            ingreso.sedes.name === "Barranca"
-          : ingreso.sedes.name === "Barranca"
-      );
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
-
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
-
-      const egresos: any = resEgreso.data.filter((egreso: any) =>
-        fecha.ini && fecha.fin
-          ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
-            egreso.sedes.name === "Barranca"
-          : egreso.sedes.name === "Barranca"
-      );
-
-      setListEgresos(egresos);
-
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
+        setIngresoTotal(deuda);
+        return;
+      }
     } else {
-      const ingresos: any = res.data.filter(
-        (ingreso: any) =>
-          moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-          moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin
-      );
-      //console.log(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
-      setListIngresos(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
+      if (
+        Boolean(filtro.huacho) === true &&
+        Boolean(filtro.huaral) === true &&
+        Boolean(filtro.barranca) === true
+      ) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huacho" ||
+                ingreso.sedes.name === "Huaral" ||
+                ingreso.sedes.name === "Barranca")
+            : //ingreso.sedes.name === "Barranca"
+              ingreso.sedes.name === "Huacho" ||
+              ingreso.sedes.name === "Huaral" ||
+              ingreso.sedes.name === "Barranca"
+        );
 
-      const cantidad = ingresos
-        .map((ingreso: any) => ingreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setIngresoTotal(cantidad);
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
 
-      const egresos: any = resEgreso.data.filter(
-        (egreso: any) =>
-          moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
-          moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin
-      );
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
 
-      setListEgresos(egresos);
+        setIngresoTotal(cantidad);
 
-      const cantidadEgreso = egresos
-        .map((egreso: any) => egreso.cantidad)
-        .reduce((a: any, b: any) => a + b, 0);
-      setEgresoTotal(cantidadEgreso);
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (egreso.sedes.name === "Huacho" ||
+                egreso.sedes.name === "Huaral" ||
+                egreso.sedes.name === "Barranca")
+            : egreso.sedes.name === "Huacho" ||
+              egreso.sedes.name === "Huaral" ||
+              egreso.sedes.name === "Barranca"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (
+        Boolean(filtro.huacho) === true &&
+        Boolean(filtro.barranca) === true &&
+        Boolean(filtro.huaral) === true
+      ) {
+        console.log("huacho huaral barrancax2");
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huacho" ||
+                ingreso.sedes.name === "Barranca" ||
+                ingreso.sedes.name === "Huaral")
+            : ingreso.sedes.name === "Huacho" ||
+              ingreso.sedes.name === "Barranca" ||
+              ingreso.sedes.name === "Huaral"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (egreso.sedes.name === "Huacho" ||
+                egreso.sedes.name === "Barranca" ||
+                egreso.sedes.name === "Huaral")
+            : egreso.sedes.name === "Huacho" ||
+              egreso.sedes.name === "Barranca" ||
+              egreso.sedes.name === "Huaral"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (
+        Boolean(filtro.huaral) === true &&
+        Boolean(filtro.huacho) === true &&
+        Boolean(filtro.barranca) === true
+      ) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huaral" ||
+                ingreso.sedes.name === "Huacho" ||
+                ingreso.sedes.name === "Barranca")
+            : ingreso.sedes.name === "Huaral" ||
+              ingreso.sedes.name === "Huacho" ||
+              ingreso.sedes.name === "Barranca"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (egreso.sedes.name === "Huaral" ||
+                egreso.sedes.name === "Huacho" ||
+                egreso.sedes.name === "Barranca")
+            : egreso.sedes.name === "Huaral" ||
+              egreso.sedes.name === "Huacho" ||
+              egreso.sedes.name === "Barranca"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (
+        Boolean(filtro.huaral) === true &&
+        Boolean(filtro.barranca) === true &&
+        Boolean(filtro.huacho) === true
+      ) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huaral" ||
+                ingreso.sedes.name === "Barranca" ||
+                ingreso.sedes.name === "Huacho")
+            : ingreso.sedes.name === "Huaral" ||
+              ingreso.sedes.name === "Barranca" ||
+              ingreso.sedes.name === "Huacho"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (egreso.sedes.name === "Huaral" ||
+                egreso.sedes.name === "Barranca" ||
+                egreso.sedes.name === "Huacho")
+            : egreso.sedes.name === "Huaral" ||
+              egreso.sedes.name === "Barranca" ||
+              egreso.sedes.name === "Huacho"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (
+        Boolean(filtro.barranca) === true &&
+        Boolean(filtro.huaral) === true &&
+        Boolean(filtro.huacho) === true
+      ) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Barranca" ||
+                ingreso.sedes.name === "Huaral" ||
+                ingreso.sedes.name === "Huacho")
+            : ingreso.sedes.name === "Barranca" ||
+              ingreso.sedes.name === "Huaral" ||
+              ingreso.sedes.name === "Huacho"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (egreso.sedes.name === "Barranca" ||
+                egreso.sedes.name === "Huaral" ||
+                egreso.sedes.name === "Huacho")
+            : egreso.sedes.name === "Barranca" ||
+              egreso.sedes.name === "Huaral" ||
+              egreso.sedes.name === "Huacho"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (
+        Boolean(filtro.barranca) === true &&
+        Boolean(filtro.huacho) === true &&
+        Boolean(filtro.huaral) === true
+      ) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Barranca" ||
+                ingreso.sedes.name === "Huacho" ||
+                ingreso.sedes.name === "Huaral")
+            : ingreso.sedes.name === "Barranca" ||
+              ingreso.sedes.name === "Huacho" ||
+              ingreso.sedes.name === "Huaral"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (egreso.sedes.name === "Barranca" ||
+                egreso.sedes.name === "Huacho" ||
+                egreso.sedes.name === "Huaral")
+            : egreso.sedes.name === "Barranca" ||
+              egreso.sedes.name === "Huacho" ||
+              egreso.sedes.name === "Huaral"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (
+        Boolean(filtro.huacho) === true &&
+        Boolean(filtro.huaral) === true
+      ) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huacho" ||
+                ingreso.sedes.name === "Huaral")
+            : ingreso.sedes.name === "Huacho" || ingreso.sedes.name === "Huaral"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (egreso.sedes.name === "Huacho" || egreso.sedes.name === "Huaral")
+            : egreso.sedes.name === "Huacho" || egreso.sedes.name === "Huaral"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (
+        Boolean(filtro.huacho) === true &&
+        Boolean(filtro.barranca) === true
+      ) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huacho" ||
+                ingreso.sedes.name === "Barranca")
+            : ingreso.sedes.name === "Huacho" ||
+              ingreso.sedes.name === "Barranca"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (egreso.sedes.name === "Huacho" ||
+                egreso.sedes.name === "Barranca")
+            : egreso.sedes.name === "Huacho" || egreso.sedes.name === "Barranca"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (
+        Boolean(filtro.huaral) === true &&
+        Boolean(filtro.huacho) === true
+      ) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huaral" ||
+                ingreso.sedes.name === "Huacho")
+            : ingreso.sedes.name === "Huaral" || ingreso.sedes.name === "Huacho"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (egreso.sedes.name === "Huaral" || egreso.sedes.name === "Huacho")
+            : egreso.sedes.name === "Huaral" || egreso.sedes.name === "Huacho"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (
+        Boolean(filtro.huaral) === true &&
+        Boolean(filtro.barranca) === true
+      ) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Huaral" ||
+                ingreso.sedes.name === "Barranca")
+            : ingreso.sedes.name === "Huaral" ||
+              ingreso.sedes.name === "Barranca"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (egreso.sedes.name === "Huaral" ||
+                egreso.sedes.name === "Barranca")
+            : egreso.sedes.name === "Huaral" || egreso.sedes.name === "Barranca"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (
+        Boolean(filtro.barranca) === true &&
+        Boolean(filtro.huacho) === true
+      ) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Barranca" ||
+                ingreso.sedes.name === "Huacho")
+            : ingreso.sedes.name === "Barranca" ||
+              ingreso.sedes.name === "Huacho"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (egreso.sedes.name === "Barranca" ||
+                egreso.sedes.name === "Huacho")
+            : egreso.sedes.name === "Barranca" || egreso.sedes.name === "Huacho"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (
+        Boolean(filtro.barranca) === true &&
+        Boolean(filtro.huaral) === true
+      ) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (ingreso.sedes.name === "Barranca" ||
+                ingreso.sedes.name === "Huaral")
+            : ingreso.sedes.name === "Barranca" ||
+              ingreso.sedes.name === "Huaral"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              (egreso.sedes.name === "Barranca" ||
+                egreso.sedes.name === "Huaral")
+            : egreso.sedes.name === "Barranca" || egreso.sedes.name === "Huaral"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (Boolean(filtro.huacho) === true) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              ingreso.sedes.name === "Huacho"
+            : ingreso.sedes.name === "Huacho"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              egreso.sedes.name === "Huacho"
+            : egreso.sedes.name === "Huacho"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (Boolean(filtro.huaral) === true) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              ingreso.sedes.name === "Huaral"
+            : ingreso.sedes.name === "Huaral"
+        );
+
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              egreso.sedes.name === "Huaral"
+            : egreso.sedes.name === "Huaral"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else if (Boolean(filtro.barranca) === true) {
+        const ingresos: any = res.data.filter((ingreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              ingreso.sedes.name === "Barranca"
+            : ingreso.sedes.name === "Barranca"
+        );
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter((egreso: any) =>
+          fecha.ini && fecha.fin
+            ? moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+              moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin &&
+              egreso.sedes.name === "Barranca"
+            : egreso.sedes.name === "Barranca"
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      } else {
+        const ingresos: any = res.data.filter(
+          (ingreso: any) =>
+            moment(ingreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+            moment(ingreso.createdAt).format("YYYY-MM-DD") <= fecha.fin
+        );
+        //console.log(ingresos.sort((a: any, b: any) => a.confirm - b.confirm));
+        setListIngresos(
+          ingresos.sort((a: any, b: any) => a.confirm - b.confirm)
+        );
+
+        const cantidad = ingresos
+          .map((ingreso: any) =>
+            ingreso.stateRenta ? ingreso.acuenta : ingreso.tramites.costo
+          )
+          .reduce((a: any, b: any) => a + b, 0);
+        setIngresoTotal(cantidad);
+
+        const egresos: any = resEgreso.data.filter(
+          (egreso: any) =>
+            moment(egreso.createdAt).format("YYYY-MM-DD") >= fecha.ini &&
+            moment(egreso.createdAt).format("YYYY-MM-DD") <= fecha.fin
+        );
+
+        setListEgresos(egresos);
+
+        const cantidadEgreso = egresos
+          .map((egreso: any) => egreso.cantidad)
+          .reduce((a: any, b: any) => a + b, 0);
+        setEgresoTotal(cantidadEgreso);
+      }
     }
-  }, [filtro.huacho, filtro.huaral, filtro.barranca, fecha.ini, fecha.fin]);
+  }, [
+    filtro.huacho,
+    filtro.huaral,
+    filtro.barranca,
+    fecha.ini,
+    fecha.fin,
+    filtro.deudores,
+  ]);
   useEffect(() => {
     //loadIngresos();
     loadEgresos();
@@ -657,20 +1022,32 @@ const CajaList = () => {
     loadFiltro();
   }, [loadFiltro]);
 
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
+
   return (
     <>
       <div className="card">
         <div className="card-header">
-          Caja{" "}
+          {Boolean(filtro.deudores) === true ? <>Deben </> : <>Caja </>}
           <strong style={{ color: "green" }}>
             {numberFormat(ingresoTotal)}
           </strong>{" "}
-          -{" "}
-          <strong style={{ color: "red" }}>{numberFormat(egresoTotal)}</strong>{" "}
-          {" = "}
-          <strong style={{ color: "purple" }}>
-            {numberFormat(Number(ingresoTotal) - Number(egresoTotal))}
-          </strong>
+          {Boolean(filtro.deudores) === true ? (
+            <></>
+          ) : (
+            <>
+              -{" "}
+              <strong style={{ color: "red" }}>
+                {numberFormat(egresoTotal)}
+              </strong>{" "}
+              {" = "}
+              <strong style={{ color: "purple" }}>
+                {numberFormat(Number(ingresoTotal) - Number(egresoTotal))}
+              </strong>
+            </>
+          )}
         </div>
         <div className="card-body">
           <div className="form-group row">
@@ -709,9 +1086,13 @@ const CajaList = () => {
                 <strong>{listIngresos.length}</strong> ingresos
               </span>
             </div>
-            <div className="col-sm-2">
-              <strong>{listEgresos.length}</strong> egresos
-            </div>
+            {filtro.deudores ? (
+              ""
+            ) : (
+              <div className="col-sm-2">
+                <strong>{listEgresos.length}</strong> egresos
+              </div>
+            )}
           </div>
           <legend>Filtros</legend>
           <div className="form-row">
@@ -744,7 +1125,7 @@ const CajaList = () => {
                 </label>
               </div>
             </div>
-            <div className="form-group col-sm-4">
+            <div className="form-group col-sm-2">
               <div className="form-check">
                 <label className="form-check-label">
                   <input
@@ -755,6 +1136,20 @@ const CajaList = () => {
                     value={filtro.barranca}
                   />
                   Barranca
+                </label>
+              </div>
+            </div>
+            <div className="form-group col-sm-2">
+              <div className="form-check">
+                <label className="form-check-label">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    name="deudores"
+                    onChange={handleCheckedChange}
+                    value={filtro.deudores}
+                  />
+                  Calcular monto deudores
                 </label>
               </div>
             </div>
@@ -790,11 +1185,12 @@ const CajaList = () => {
                               </th>
                               <th scope="col">Estudiante</th>
                               <th scope="col">Secretari@</th>
+                              <th scope="col">Tramite</th>
                               <th scope="col" style={{ width: "10px" }}>
                                 Recibo
                               </th>
                               <th scope="col">Monto</th>
-                              <th scope="col">Tramite</th>
+                              <th scope="col">Debe</th>
                               <th scope="col">Fecha</th>
                               <th scope="col">Estado</th>
                             </tr>
@@ -805,6 +1201,7 @@ const CajaList = () => {
                                 loadIngresos={loadFiltro}
                                 key={ingreso._id}
                                 pago={ingreso}
+                                debe={Boolean(filtro.deudores)}
                               />
                             ))}
                           </tbody>

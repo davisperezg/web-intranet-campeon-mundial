@@ -6,6 +6,7 @@ import EgresoItem from "./EgresoItem";
 import moment from "moment";
 import { numberFormat } from "../lib/index";
 import { UserContext } from "../Context/UserContext";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 const EgresoList = () => {
   const [loading, setLoading] = useState(true);
@@ -95,6 +96,10 @@ const EgresoList = () => {
     }
     loadEgresosXadmin(userData.id);
   }, [userData.id, userData.role]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   if (loading)
     return (

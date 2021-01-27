@@ -1,20 +1,32 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Sedes } from "./Sedes";
 import * as SedesService from "./SedesService";
 import SedesItem from "./SedesItem";
+import MostarSesionTerminada from "./../lib/SesionTerminada";
+import { UserContext } from "../Context/UserContext";
+
 const SedesList = () => {
   const [loading, setLoading] = useState(true);
+  const { userData, setUserData }: any = useContext(UserContext);
 
   const [sedes, setSedes] = useState<Sedes[]>([]);
   const loadSedes = async () => {
-    const res = await SedesService.getSedes();
-    setLoading(false);
-    setSedes(res.data);
+    try {
+      const res = await SedesService.getSedes();
+      setLoading(false);
+      setSedes(res.data);
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   useEffect(() => {
     loadSedes();
   }, []);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   if (loading)
     return (

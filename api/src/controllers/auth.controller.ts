@@ -6,9 +6,9 @@ import config from "../config";
 import jwt from "jsonwebtoken";
 import Roles from "../models/Roles";
 import Sedes from "../models/Sedes";
+import { uid, suid } from "rand-token";
 
 export const findUser: RequestHandler = async (req, res) => {
-  //console.log(req.user);
   res.status(200).json(req.user);
 };
 //registrar usuario administradores
@@ -77,6 +77,7 @@ export const signUp: RequestHandler = async (req, res) => {
     return res.status(400).json(e);
   }
 };
+var refreshTokens: any = {};
 
 export const signIn: RequestHandler = async (req, res) => {
   //parametros ingresados
@@ -108,11 +109,33 @@ export const signIn: RequestHandler = async (req, res) => {
     return res.status(400).json({ message: "Acceso denegado" });
   }
   //si todo es exito ejecuta la creación de token
+  const refreshToken = uid(256);
   const token = jwt.sign({ id: userFound._id }, config.SECRET_KEY, {
     expiresIn: config.EXPIRE_KEY,
   });
-  res.status(200).json({ token });
+  refreshTokens[refreshToken] = username;
+  res.status(200).json({ token, refreshToken: refreshToken });
 };
+
+export const token: RequestHandler = async (req, res) => {
+  let username = req.body.username;
+  let refreshToken = req.body.refreshToken;
+  if (
+    refreshToken in refreshTokens &&
+    refreshTokens[refreshToken] == username
+  ) {
+    const userFound: any = await Users.findOne({
+      username: username,
+    });
+    let token = jwt.sign({ id: userFound._id }, config.SECRET_KEY, {
+      expiresIn: config.EXPIRE_KEY,
+    });
+    res.status(200).json({ token });
+  } else {
+    res.send(401);
+  }
+};
+
 //registro list delete get update
 export const listUsers: RequestHandler = async (req, res) => {
   const JustAlumno = await Roles.findOne({ name: { $in: "Admin" } });

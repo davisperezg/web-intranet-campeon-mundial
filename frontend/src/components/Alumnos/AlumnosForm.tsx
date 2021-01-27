@@ -8,6 +8,7 @@ import React, {
   useEffect,
   useContext,
 } from "react";
+import { generatePDF } from "../lib/FichaMatriculaPDF";
 import { UserContext } from "../Context/UserContext";
 import { GoArrowLeft } from "react-icons/go";
 import { useHistory, useParams } from "react-router-dom";
@@ -20,6 +21,11 @@ import moment from "moment";
 import { Tramites } from "./../Tramites/Tramites";
 import TramiteItem from "./TramiteItem";
 import { confirmAlert } from "react-confirm-alert"; // Import
+import { Pagos } from "./../Pagos/Pagos";
+import * as pagosService from "../Pagos/PagosService";
+import { Documentos } from "./../Documentos/Documentos";
+import * as documentoService from "../Documentos/DocumentosService";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 type SelectChange = ChangeEvent<HTMLSelectElement>;
@@ -45,29 +51,73 @@ const AlumnosForm = () => {
     //tramites: [] || "",
     registrador: "",
   };
+
+  const initialStatePago = {
+    cantidad: 1,
+    nroRecibo: 0,
+    tramites: "",
+    estudiante: "",
+    registrador: userData.id,
+    stateRenta: false,
+    acuenta: 0,
+  };
+
+  const initialStateDocu = {
+    fechaEntregaBalotario: "",
+    fechaEntregaCertificadoMedico: "",
+    fechaEntregaCertificadoCofipro: "",
+    fechaEntregaCarnet: "",
+    fechaEntregaGuiaManejo: "",
+    fechaEntregaActa: "",
+    estudiante: "",
+  };
+
   const history = useHistory();
-
   const ref = createRef<HTMLInputElement>();
-
   const refPassword: any = createRef<HTMLInputElement>();
-
   const params = useParams<Params>();
-
   const [isReadonly, setIsReadonly] = useState(true);
-
   const [isReadonlyDNI, setIsReadonlyDNI] = useState(false);
-
   const [isDisabledGuardar, setDisabledGuardar] = useState(true);
-
   const [isDisabledButton, setDisabledButton] = useState(true);
-
   const [TextButton, setTextButton] = useState("Consultar");
-
   const [alumno, setAlumno] = useState<Alumno>(initialState);
-
+  const [pago, setPago] = useState<Pagos>(initialStatePago);
   const [tramite, setTramite] = useState<Tramites[]>([]);
+  const [step1, setStep1] = useState<Boolean>(true);
+  const [step2, setStep2] = useState<Boolean>(false);
+  const [step3, setStep3] = useState<Boolean>(false);
+  const [documento, setDocumento] = useState<Documentos>(initialStateDocu);
 
   //const [dataDNi, setDataDNI]: any = useState(initialState_user);
+  const [isActive, setActive] = useState({
+    circle: false,
+  });
+  const classNameCircle = isActive.circle
+    ? "btn btn-default btn-circle"
+    : "btn btn-primary btn-circle";
+  const hanldeClickCircle = () => {
+    setActive({ circle: !isActive.circle });
+  };
+
+  const [isActive2, setActive2] = useState({
+    circle: true,
+  });
+  const [isActive3, setActive3] = useState({
+    circle: true,
+  });
+  const classNameCircle2 = isActive2.circle
+    ? "btn btn-default btn-circle"
+    : "btn btn-primary btn-circle";
+  const classNameCircle3 = isActive3.circle
+    ? "btn btn-default btn-circle"
+    : "btn btn-primary btn-circle";
+  const hanldeClickCircle2 = () => {
+    setActive2({ circle: !isActive2.circle });
+  };
+  const hanldeClickCircle3 = () => {
+    setActive3({ circle: !isActive3.circle });
+  };
 
   const consultSeq = async () => {
     const res: any = await alumnoService.consultNroOfUsername();
@@ -136,8 +186,20 @@ const AlumnosForm = () => {
   const handleInputChange = (e: InputChange) =>
     setAlumno({ ...alumno, [e.target.name]: e.target.value });
 
-  const handleSelectChange = (e: SelectChange) =>
+  const handleInputChangeDocu = (e: InputChange) =>
+    setDocumento({ ...documento, [e.target.name]: e.target.value });
+
+  const handleInputChangePago = (e: InputChange) =>
+    setPago({ ...pago, [e.target.name]: e.target.value });
+
+  const handleCheckedChange = (e: ChangeEvent<HTMLInputElement>) =>
+    setPago({ ...pago, [e.target.name]: e.target.checked });
+
+  const handleSelectChangeSede = (e: SelectChange) =>
     setAlumno({ ...alumno, [e.target.name]: e.target.value });
+
+  const handleSelectChangeTramite = (e: SelectChange) =>
+    setPago({ ...pago, [e.target.name]: e.target.value });
 
   const handleSubmit = async () => {
     //e.preventDefault();
@@ -153,18 +215,30 @@ const AlumnosForm = () => {
         ) {
           return toast.error("Completar sede");
         }
-        if (
+        /** PARCHANDO NUEVO FORM
+         * if (
           alumno.tramites === "" ||
           alumno.tramites === null ||
           alumno.tramites === undefined
         ) {
           return toast.error("Completar tramite");
         }
-        await alumnoService.createNewAlumnos(alumno);
+         */
+        const resRegistro = await alumnoService.createNewAlumnos(alumno);
+        localStorage.setItem("usuarioRegistro", resRegistro.data._id);
         await alumnoService.updateNroOfUsername();
         setAlumno(initialState);
-        toast.success("Alumno añadido");
-        history.push("/alumnos");
+        hanldeClickCircle2();
+        setStep2(true);
+        setStep1(false);
+        setPago({
+          ...pago,
+          estudiante: localStorage.getItem("usuarioRegistro") || "",
+        });
+        setDocumento({
+          ...documento,
+          estudiante: localStorage.getItem("usuarioRegistro") || "",
+        });
       } catch (e) {
         //console.log(e.request.response);
         if (JSON.parse(e.request.response).keyValue) {
@@ -251,7 +325,7 @@ const AlumnosForm = () => {
       address,
       sedes: res.data.sedes[0].name,
       telephone,
-      tramites: res.data.tramites[0].name,
+      //tramites: res.data.tramites[0].name,
     });
   };
 
@@ -280,11 +354,41 @@ const AlumnosForm = () => {
     });
   };
 
+  const handleSubmitDocu = async () => {
+    try {
+      await documentoService.createNewDocumentos(documento);
+      setPago(initialStatePago);
+    } catch (e) {
+      toast.error(JSON.parse(e.request.response).message);
+    }
+  };
+
+  const handleSubmitPago = async () => {
+    try {
+      await pagosService.createNewPagos(pago);
+      toast.success("El pago se ha registrado.");
+    } catch (e) {
+      toast.error(JSON.parse(e.request.response).message);
+    }
+  };
+
+  const handleSubmitPagoNo = async () => {
+    try {
+      await pagosService.createNewPagos(pago);
+      setPago(initialStatePago);
+      hanldeClickCircle3();
+      setStep2(false);
+      setStep3(true);
+    } catch (e) {
+      toast.error(JSON.parse(e.request.response).message);
+    }
+  };
+
   const modalComfirmarRegistro = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     confirmAlert({
       title: "Mensaje",
-      message: "Esta seguro que desea registrar ?",
+      message: "Está seguro que desea registrar ?",
       buttons: [
         {
           label: "Si",
@@ -300,11 +404,73 @@ const AlumnosForm = () => {
     });
   };
 
+  const modalComfirmarRegistroPagos = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    confirmAlert({
+      title: "Advertencia !",
+      message: "Realizará otro pago ?",
+      buttons: [
+        {
+          label: "Si",
+          onClick: async () => {
+            handleSubmitPago();
+          },
+        },
+        {
+          label: "No",
+          onClick: async () => {
+            handleSubmitPagoNo();
+          },
+        },
+        {
+          label: "Cancelar",
+          onClick: () => {},
+        },
+      ],
+    });
+  };
+
+  const modalComfirmarRegistroDocu = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    confirmAlert({
+      title: "Confirmación",
+      message: "Está seguro que desea finalizar el registro ?",
+      buttons: [
+        {
+          label: "Si",
+          onClick: () => {
+            setDocumento({
+              ...documento,
+              estudiante: localStorage.getItem("usuarioRegistro") || "",
+            });
+            handleSubmitDocu();
+            setStep1(true);
+            setStep2(false);
+            setStep3(false);
+            hanldeClickCircle3();
+            hanldeClickCircle2();
+            generatePDF(localStorage.getItem("usuarioRegistro") || "");
+            localStorage.removeItem("usuarioRegistro");
+            setDocumento(initialStateDocu);
+          },
+        },
+        {
+          label: "No",
+          onClick: () => {},
+        },
+      ],
+    });
+  };
+
   useEffect(() => {
     getTramites();
     if (params.id) getAlumno(params.id);
-  }, [params.id]);
+  }, [params.id, userData.id]);
   //offset-md-8
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   if (params.id) {
     return (
@@ -474,7 +640,7 @@ const AlumnosForm = () => {
                     id="exampleSelect1"
                     name="sedes"
                     disabled={false}
-                    onChange={handleSelectChange}
+                    onChange={handleSelectChangeSede}
                     value={String(alumno.sedes)}
                   >
                     <option value="Huacho">Huacho</option>
@@ -482,53 +648,6 @@ const AlumnosForm = () => {
                     <option value="Barranca">Barranca</option>
                   </select>
                 </div>
-                {params.id ? (
-                  <>
-                    {userData.role === "Super Admin" ? (
-                      <>
-                        <div className="form-group">
-                          <label htmlFor="exampleSelect1">Tramite</label>
-                          <select
-                            className="form-control"
-                            id="exampleSelect1"
-                            name="tramites"
-                            disabled={false}
-                            onChange={handleSelectChange}
-                            value={String(alumno.tramites)}
-                          >
-                            {tramite.map((tramite) => (
-                              <TramiteItem
-                                tramite={tramite}
-                                key={tramite._id}
-                              />
-                            ))}
-                          </select>
-                        </div>
-                      </>
-                    ) : (
-                      <></>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="form-group">
-                      <label htmlFor="exampleSelect1">Tramite</label>
-                      <select
-                        className="form-control"
-                        id="exampleSelect1"
-                        name="tramites"
-                        disabled={false}
-                        onChange={handleSelectChange}
-                        value={String(alumno.tramites)}
-                      >
-                        {tramite.map((tramite) => (
-                          <TramiteItem tramite={tramite} key={tramite._id} />
-                        ))}
-                      </select>
-                    </div>
-                  </>
-                )}
-
                 <button className="btn btn-warning" style={{ width: "100%" }}>
                   Actualizar
                 </button>
@@ -572,177 +691,208 @@ const AlumnosForm = () => {
           />
           <div className="card-body">
             <h4>ALUMNO {alumno.dni ? alumno.nombres : ""}</h4>
-            <form onSubmit={modalComfirmarRegistro}>
-              <div className="form-row">
-                <div className="form-group col-md-8">
-                  <GoSync
-                    onClick={() => {
-                      setIsReadonly(true);
-                      setDisabledGuardar(true);
-                      setAlumno(initialState);
-                    }}
-                    className="offset-md-11 offset-sm-11"
-                    style={{
-                      cursor: "pointer",
-                      position: "absolute",
-                      top: "10px",
-                    }}
-                  />
-                  <input
-                    readOnly={isReadonlyDNI}
-                    ref={ref}
-                    type="text"
-                    name="dni"
-                    placeholder="D.N.I"
-                    className="form-control"
-                    autoFocus
-                    value={alumno.dni}
-                    onKeyUp={onKeyUpValue}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="form-group col-md-4">
-                  <button
-                    disabled={isDisabledButton}
-                    onClick={consultDocument}
-                    type="button"
-                    className="btn btn-info  btn-block"
-                  >
-                    {TextButton}
-                  </button>
+            <div>
+              <div className="stepwizard col-md-offset-3">
+                <div className="stepwizard-row setup-panel">
+                  <div className="stepwizard-step">
+                    <a type="button" className={classNameCircle}>
+                      1
+                    </a>
+                    <p>Alumno</p>
+                  </div>
+                  <div className="stepwizard-step">
+                    <a type="button" className={classNameCircle2}>
+                      2
+                    </a>
+                    <p>Pagos</p>
+                  </div>
+                  <div className="stepwizard-step">
+                    <a
+                      className={classNameCircle3}
+                      type="button"
+                      //className={classNameCircle}
+                    >
+                      3
+                    </a>
+                    <p>Entrega</p>
+                  </div>
                 </div>
               </div>
-              <div className="form-group">
-                <input
-                  className="form-control"
-                  type="text"
-                  name="nombres"
-                  placeholder="Nombres"
-                  onChange={handleInputChange}
-                  value={alumno.nombres}
-                  readOnly={true}
-                />
-              </div>
-              <div className="form-row">
-                <div className="form-group col-md-6">
-                  <input
-                    type="text"
-                    name="username"
-                    placeholder="Username"
-                    readOnly={true}
-                    className="form-control"
-                    onChange={handleInputChange}
-                    value={alumno.username}
-                  />
-                </div>
+            </div>
+            {step1 ? (
+              <>
+                <form onSubmit={modalComfirmarRegistro} id="step-2">
+                  <div className="form-row">
+                    <div className="form-group col-md-8">
+                      <GoSync
+                        onClick={() => {
+                          setIsReadonly(true);
+                          setDisabledGuardar(true);
+                          setAlumno(initialState);
+                        }}
+                        className="offset-md-11 offset-sm-11"
+                        style={{
+                          cursor: "pointer",
+                          position: "absolute",
+                          top: "10px",
+                        }}
+                      />
+                      <input
+                        readOnly={isReadonlyDNI}
+                        ref={ref}
+                        type="text"
+                        name="dni"
+                        placeholder="D.N.I"
+                        className="form-control"
+                        autoFocus
+                        value={alumno.dni}
+                        onKeyUp={onKeyUpValue}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    <div className="form-group col-md-4">
+                      <button
+                        disabled={isDisabledButton}
+                        onClick={consultDocument}
+                        type="button"
+                        className="btn btn-info  btn-block"
+                      >
+                        {TextButton}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <input
+                      className="form-control"
+                      type="text"
+                      name="nombres"
+                      placeholder="Nombres"
+                      onChange={handleInputChange}
+                      value={alumno.nombres}
+                      readOnly={true}
+                    />
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group col-md-6">
+                      <input
+                        type="text"
+                        name="username"
+                        placeholder="Username"
+                        readOnly={true}
+                        className="form-control"
+                        onChange={handleInputChange}
+                        value={alumno.username}
+                      />
+                    </div>
 
-                <div className="form-group col-md-6">
-                  <input
-                    ref={refPassword}
-                    type="text"
-                    name="password"
-                    placeholder="Paswword"
-                    className="form-control"
-                    onChange={handleInputChange}
-                    //value={alumno.password}
-                    readOnly={isReadonly}
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Correo electronico"
-                  className="form-control"
-                  onChange={handleInputChange}
-                  value={alumno.email}
-                  readOnly={isReadonly}
-                />
-              </div>
-              <div className="form-row">
-                <div className="form-group col-md-6">
-                  <input
-                    type="text"
-                    name="cellphone"
-                    placeholder="Celular"
-                    className="form-control"
-                    onChange={handleInputChange}
-                    value={alumno.cellphone}
-                    readOnly={isReadonly}
-                  />
-                </div>
-                <div className="form-group col-md-6">
-                  <input
-                    type="text"
-                    name="telephone"
-                    placeholder="Telefono (opcional)"
-                    className="form-control"
-                    onChange={handleInputChange}
-                    value={alumno.telephone}
-                    readOnly={isReadonly}
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <input
-                  type="text"
-                  name="address"
-                  placeholder="Dirección (opcional)"
-                  className="form-control"
-                  onChange={handleInputChange}
-                  value={alumno.address}
-                  readOnly={isReadonly}
-                />
-              </div>
-              <div className="form-row">
-                <div className="form-group col-md-6">
-                  <label htmlFor="inputStartClasses">
-                    Inicio de clases (opcional)
-                  </label>
-                  <input
-                    type="date"
-                    name="startClasses"
-                    className="form-control"
-                    onChange={handleInputChange}
-                    readOnly={isReadonly}
-                    value={alumno.startClasses}
-                  />
-                </div>
-                <div className="form-group col-md-6">
-                  <label htmlFor="inputEndClasses">
-                    Fin de clases (opcional)
-                  </label>
-                  <input
-                    type="date"
-                    name="endClasses"
-                    className="form-control"
-                    value={alumno.endClasses}
-                    onChange={handleInputChange}
-                    readOnly={isReadonly}
-                  />
-                </div>
-              </div>
+                    <div className="form-group col-md-6">
+                      <input
+                        ref={refPassword}
+                        type="text"
+                        name="password"
+                        placeholder="Paswword"
+                        className="form-control"
+                        onChange={handleInputChange}
+                        //value={alumno.password}
+                        readOnly={isReadonly}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="Correo electronico"
+                      className="form-control"
+                      onChange={handleInputChange}
+                      value={alumno.email}
+                      readOnly={isReadonly}
+                    />
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group col-md-6">
+                      <input
+                        type="text"
+                        name="cellphone"
+                        placeholder="Celular"
+                        className="form-control"
+                        onChange={handleInputChange}
+                        value={alumno.cellphone}
+                        readOnly={isReadonly}
+                      />
+                    </div>
+                    <div className="form-group col-md-6">
+                      <input
+                        type="text"
+                        name="telephone"
+                        placeholder="Telefono (opcional)"
+                        className="form-control"
+                        onChange={handleInputChange}
+                        value={alumno.telephone}
+                        readOnly={isReadonly}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <input
+                      type="text"
+                      name="address"
+                      placeholder="Dirección (opcional)"
+                      className="form-control"
+                      onChange={handleInputChange}
+                      value={alumno.address}
+                      readOnly={isReadonly}
+                    />
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group col-md-6">
+                      <label htmlFor="inputStartClasses">
+                        Inicio de clases (opcional)
+                      </label>
+                      <input
+                        type="date"
+                        name="startClasses"
+                        className="form-control"
+                        onChange={handleInputChange}
+                        readOnly={isReadonly}
+                        value={alumno.startClasses}
+                      />
+                    </div>
+                    <div className="form-group col-md-6">
+                      <label htmlFor="inputEndClasses">
+                        Fin de clases (opcional)
+                      </label>
+                      <input
+                        type="date"
+                        name="endClasses"
+                        className="form-control"
+                        value={alumno.endClasses}
+                        onChange={handleInputChange}
+                        readOnly={isReadonly}
+                      />
+                    </div>
+                  </div>
 
-              <div className="form-group">
-                <label htmlFor="exampleSelect1">Sede</label>
-                <select
-                  className="form-control"
-                  id="exampleSelect1"
-                  name="sedes"
-                  disabled={isReadonly}
-                  onChange={handleSelectChange}
-                  defaultValue={"NOSELECT"}
-                >
-                  <option value="NOSELECT" disabled>
-                    Seleccione una sede
-                  </option>
-                  <option value="Huacho">Huacho</option>
-                  <option value="Huaral">Huaral</option>
-                  <option value="Barranca">Barranca</option>
-                </select>
-              </div>
-              <div className="form-group">
+                  <div className="form-group">
+                    <label htmlFor="exampleSelect1">Sede</label>
+                    <select
+                      className="form-control"
+                      id="exampleSelect1"
+                      name="sedes"
+                      disabled={isReadonly}
+                      onChange={handleSelectChangeSede}
+                      defaultValue={"NOSELECT"}
+                    >
+                      <option value="NOSELECT" disabled>
+                        Seleccione una sede
+                      </option>
+                      <option value="Huacho">Huacho</option>
+                      <option value="Huaral">Huaral</option>
+                      <option value="Barranca">Barranca</option>
+                    </select>
+                  </div>
+                  {/**
+                 * <div className="form-group">
                 <label htmlFor="exampleSelect1">Tramite</label>
                 <select
                   className="form-control"
@@ -760,14 +910,203 @@ const AlumnosForm = () => {
                   ))}
                 </select>
               </div>
-              <button
-                className="btn btn-primary"
-                style={{ width: "100%" }}
-                disabled={isDisabledGuardar}
-              >
-                Guardar
-              </button>
-            </form>
+                 */}
+                  <button
+                    className="btn btn-primary"
+                    style={{ width: "100%" }}
+                    disabled={isDisabledGuardar}
+                  >
+                    Registrar
+                  </button>
+                </form>
+              </>
+            ) : (
+              <></>
+            )}
+            {step2 ? (
+              <>
+                <form onSubmit={modalComfirmarRegistroPagos}>
+                  <div className="form-group">
+                    <label htmlFor="exampleSelect1">Tramite</label>
+                    <select
+                      autoFocus
+                      className="form-control"
+                      id="exampleSelect1"
+                      name="tramites"
+                      disabled={isReadonly}
+                      onChange={handleSelectChangeTramite}
+                      defaultValue={"NOSELECT"}
+                    >
+                      <option value="NOSELECT" disabled>
+                        Seleccione un tramite
+                      </option>
+                      {tramite.map((tramite) => (
+                        <TramiteItem tramite={tramite} key={tramite._id} />
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="exampleSelect1">Unidades</label>
+                    <input
+                      type="text"
+                      name="cantidad"
+                      placeholder="Unidades"
+                      className="form-control"
+                      onChange={handleInputChangePago}
+                      value={Number(pago.cantidad)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="exampleSelect1">Nº Recibo</label>
+                    <input
+                      type="text"
+                      name="nroRecibo"
+                      placeholder="Nro Recibo"
+                      className="form-control"
+                      onChange={handleInputChangePago}
+                      value={Number(pago.nroRecibo)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <div className="custom-control custom-checkbox">
+                      <input
+                        type="checkbox"
+                        className="custom-control-input"
+                        id="customCheck1"
+                        onChange={handleCheckedChange}
+                        name="stateRenta"
+                        checked={Boolean(pago.stateRenta)}
+                      />
+                      <label
+                        className="custom-control-label"
+                        htmlFor="customCheck1"
+                      >
+                        El alumno está dejando dinero a cuenta ?
+                      </label>
+                    </div>
+                  </div>
+                  {pago.stateRenta ? (
+                    <>
+                      <div className="form-group">
+                        <label htmlFor="exampleSelect1">Monto a cuenta</label>
+                        <input
+                          type="text"
+                          name="acuenta"
+                          value={Number(pago.acuenta)}
+                          placeholder="Dinero a cuenta"
+                          className="form-control"
+                          onChange={handleInputChangePago}
+                        />
+                      </div>
+                    </>
+                  ) : pago.acuenta ? (
+                    (pago.acuenta = 0)
+                  ) : pago.acuenta === 0 ? (
+                    ""
+                  ) : (
+                    ""
+                  )}
+
+                  <button className="btn btn-primary" style={{ width: "100%" }}>
+                    Registrar
+                  </button>
+                </form>
+              </>
+            ) : (
+              <></>
+            )}
+            {step3 ? (
+              <>
+                <form onSubmit={modalComfirmarRegistroDocu}>
+                  <div className="form-group">
+                    <label className="form-label">F.E Balotario</label>
+                    <input
+                      type="date"
+                      name="fechaEntregaBalotario"
+                      className="form-control"
+                      onChange={handleInputChangeDocu}
+                      value={moment(documento.fechaEntregaBalotario)
+                        .utc()
+                        .format("YYYY-MM-DD")}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">F.E Certificado medico</label>
+                    <input
+                      type="date"
+                      name="fechaEntregaCertificadoMedico"
+                      className="form-control"
+                      onChange={handleInputChangeDocu}
+                      value={moment(documento.fechaEntregaCertificadoMedico)
+                        .utc()
+                        .format("YYYY-MM-DD")}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      F.E Certificado cofipro
+                    </label>
+                    <input
+                      type="date"
+                      name="fechaEntregaCertificadoCofipro"
+                      className="form-control"
+                      onChange={handleInputChangeDocu}
+                      value={moment(documento.fechaEntregaCertificadoCofipro)
+                        .utc()
+                        .format("YYYY-MM-DD")}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">F.E Carnet</label>
+                    <input
+                      type="date"
+                      name="fechaEntregaCarnet"
+                      className="form-control"
+                      onChange={handleInputChangeDocu}
+                      value={moment(documento.fechaEntregaCarnet)
+                        .utc()
+                        .format("YYYY-MM-DD")}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">F.E Guia manejo</label>
+                    <input
+                      type="date"
+                      name="fechaEntregaGuiaManejo"
+                      className="form-control"
+                      onChange={handleInputChangeDocu}
+                      value={moment(documento.fechaEntregaGuiaManejo)
+                        .utc()
+                        .format("YYYY-MM-DD")}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">F.E Acta</label>
+                    <input
+                      type="date"
+                      name="fechaEntregaActa"
+                      className="form-control"
+                      onChange={handleInputChangeDocu}
+                      value={moment(documento.fechaEntregaActa)
+                        .utc()
+                        .format("YYYY-MM-DD")}
+                    />
+                  </div>
+
+                  <button className="btn btn-primary" style={{ width: "100%" }}>
+                    Registrar
+                  </button>
+                </form>
+              </>
+            ) : (
+              <></>
+            )}
           </div>
         </div>
       </div>

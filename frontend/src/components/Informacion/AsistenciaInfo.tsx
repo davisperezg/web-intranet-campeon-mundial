@@ -4,6 +4,7 @@ import { Asistencia } from "../Asistencia/Asistencia";
 import AsistenciaItem from "./../Asistencia/AsistenciaItem";
 import * as asistenciaService from "./../Asistencia/AsistenciaService";
 import { UserContext } from "../Context/UserContext";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 interface Props {
   setActivatePrincipal: (statud: boolean) => void;
@@ -24,6 +25,11 @@ const InfoAsistencia = (props: Props) => {
   useEffect(() => {
     loadAsistencias();
   }, [loadAsistencias]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
+
   return (
     <>
       <div className="row">

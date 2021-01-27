@@ -1,4 +1,10 @@
-import React, { useState, useEffect, createElement, useCallback } from "react";
+import React, {
+  useState,
+  useCallback,
+  useContext,
+  useEffect,
+  createElement,
+} from "react";
 import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
 import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
 import "bootswatch/dist/pulse/bootstrap.min.css";
@@ -17,9 +23,16 @@ import AlumnosInfo from "./components/Alumnos/AlumnosInfo";
 import AlumnosList from "./components/Alumnos/AlumnosList";
 import SedesForm from "./components/Sedes/SedesForm";
 import SedesList from "./components/Sedes/SedesList";
-import { getToken } from "./components/Helpers/AuthToken";
+import {
+  getToken,
+  getRefreshToken,
+  deleteToken,
+  setRefreshToken,
+  setToken,
+  deleteRefreshToken,
+} from "./components/Helpers/AuthToken";
 import { ToastContainer } from "react-toastify";
-import { UserProvider } from "./components/Context/UserContext";
+import { UserContext, UserProvider } from "./components/Context/UserContext";
 import axios from "axios";
 import * as userService from "./components/Users/UserService";
 import AdministradorInfo from "./components/Administradores/UsuariosInfo";
@@ -38,21 +51,37 @@ import CitaList from "./components/Cita/CitaList";
 import CitaForm from "./components/Cita/CitaForm";
 import NotasFormPM from "./components/NotasPracticasManejo/NotaFormPM";
 import Principal from "./components/Principal/Principal";
-
+import MostarSesionTerminada from "./components/lib/SesionTerminada";
 //axios.defaults.baseURL = `${process.env.REACT_APP_API}/`;
 
-const PrivateRoute = ({ component, ...rest }: any) => {
+const PrivateRoute = ({ component, isAuthenticated, ...rest }: any) => {
+  const CargaUser = () => {
+    const { setUserData }: any = useContext(UserContext);
+
+    const cargaUsuario = async () => {
+      try {
+        await userService.getData();
+      } catch (e) {
+        setUserData({ state: false });
+      }
+    };
+    useEffect(() => {
+      cargaUsuario();
+    }, [cargaUsuario]);
+  };
+  CargaUser();
+
   const routeComponent = (props: any) =>
     getToken() ? (
       createElement(component, props)
     ) : (
       <Redirect to={{ pathname: "/login" }} />
     );
-  //console.log(isAuthenticated);
+
   return <Route {...rest} render={routeComponent} />;
 };
 
-const VerifyTokenLogin = ({ component, ...rest }: any) => {
+const VerifyTokenLogin = ({ component, isAuthenticated, ...rest }: any) => {
   const routeComponent = (props: any) =>
     getToken() ? (
       <Redirect to={{ pathname: "/" }} />
@@ -62,7 +91,22 @@ const VerifyTokenLogin = ({ component, ...rest }: any) => {
   //console.log(estado);
   return <Route {...rest} render={routeComponent} />;
 };
-const VerifyTokenDashboard = ({ component, ...rest }: any) => {
+const VerifyTokenDashboard = ({ component, isAuthenticated, ...rest }: any) => {
+  const CargaUser = () => {
+    const { setUserData }: any = useContext(UserContext);
+
+    const cargaUsuario = async () => {
+      try {
+        await userService.getData();
+      } catch (e) {
+        setUserData({ state: false });
+      }
+    };
+    useEffect(() => {
+      cargaUsuario();
+    }, [cargaUsuario]);
+  };
+  CargaUser();
   const routeComponent = (props: any) =>
     getToken() ? (
       createElement(component, props)
@@ -71,6 +115,7 @@ const VerifyTokenDashboard = ({ component, ...rest }: any) => {
     );
   return <Route {...rest} render={routeComponent} />;
 };
+
 export default function App() {
   const [userData, setUserData]: any = useState({});
 
@@ -78,9 +123,19 @@ export default function App() {
     try {
       const userFound: any = await userService.getData();
       setUserData(userFound.data);
-      //setUserData({ ...userData, estado: 1 });
+      localStorage.setItem("username", userFound.data.username.toLowerCase());
     } catch (e) {
-      //setIsAuthenticated(false);
+      deleteToken();
+      let username: any = localStorage.getItem("username");
+      try {
+        const dice: any = await userService.postRefresh(
+          username,
+          getRefreshToken()
+        );
+        setToken(dice.data.token);
+      } catch (e) {
+        console.log(e);
+      }
     }
   };
 
@@ -97,13 +152,7 @@ export default function App() {
       <React.StrictMode>
         <BrowserRouter>
           <UserProvider value={{ userData, setUserData }}>
-            {!getToken() ? (
-              <></>
-            ) : (
-              <>
-                <Navbar />
-              </>
-            )}
+            {getToken() ? <Navbar /> : ""}
             <div className="container p-4">
               <Switch>
                 <VerifyTokenLogin exact path="/login" component={LoginForm} />
@@ -171,7 +220,6 @@ export default function App() {
                   path="/alumnos/pagos/:id/pago/:idpago"
                   component={PagosList}
                 />
-
                 <PrivateRoute
                   exact
                   path="/alumnos/fecha/documentos/:id"

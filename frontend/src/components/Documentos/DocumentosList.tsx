@@ -6,6 +6,7 @@ import DocumentosForm from "./DocumentosForm";
 import DocumentosItem from "./DocumentosItem";
 import * as alumnoService from "../Alumnos/AlumnoService";
 import { UserContext } from "../Context/UserContext";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 interface Params {
   id?: string;
@@ -41,6 +42,10 @@ const DocumentosList = () => {
     getInfoAlumno();
     loadDocumentos();
   }, []);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   if (loading)
     return (

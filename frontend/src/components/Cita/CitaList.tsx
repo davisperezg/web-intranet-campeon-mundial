@@ -1,16 +1,19 @@
-import React, { useState, useEffect, KeyboardEvent } from "react";
+import React, { useContext, useState, useEffect, KeyboardEvent } from "react";
 import { useHistory, useParams } from "react-router-dom";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 import { Cita } from "./Cita";
 import CitaItem from "./CitaItem";
+import { UserContext } from "../Context/UserContext";
+
 import * as citaService from "./CitaService";
 const CitaList = () => {
   const history = useHistory();
   const [citas, setCitas] = useState<Cita[]>([]);
   const [loading, setLoading] = useState(true);
+  const { userData, setUserData }: any = useContext(UserContext);
 
   const loadCitas = async () => {
     const res = await citaService.getCitas();
-    console.log(res.data);
     const formatedVideos = res.data
       .map((cita) => {
         return {
@@ -42,6 +45,10 @@ const CitaList = () => {
   useEffect(() => {
     loadCitas();
   }, []);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   return (
     <>

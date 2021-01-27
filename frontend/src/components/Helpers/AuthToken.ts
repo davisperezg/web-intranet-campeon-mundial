@@ -1,16 +1,23 @@
-export function getToken() {
-  return localStorage.getItem("token");
+export function deleteToken() {
+  return localStorage.removeItem("accessToken");
 }
 
-export function deleteToken(token: string) {
-  return localStorage.removeItem(token);
+export function deleteRefreshToken() {
+  return localStorage.removeItem("refreshToken");
 }
 
 export function setToken(token: string) {
-  return localStorage.setItem("token", token);
+  return localStorage.setItem("accessToken", token);
 }
 
-export function refreshToken() {
-  //deleteToken(token);
-  return;
+export function setRefreshToken(token: string) {
+  return localStorage.setItem("refreshToken", token);
+}
+
+export function getToken() {
+  return localStorage.getItem("accessToken");
+}
+
+export function getRefreshToken() {
+  return localStorage.getItem("refreshToken");
 }

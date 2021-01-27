@@ -12,6 +12,7 @@ import { useHistory, useParams } from "react-router-dom";
 import { confirmAlert } from "react-confirm-alert"; // Import
 import { toast } from "react-toastify";
 import { UserContext } from "../Context/UserContext";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
@@ -64,6 +65,10 @@ const EgresoForm = () => {
   useEffect(() => {
     setEgreso({ ...egreso, registrador: userData.id });
   }, [userData.id]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   return (
     <>

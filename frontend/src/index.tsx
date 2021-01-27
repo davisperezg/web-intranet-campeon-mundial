@@ -2,10 +2,16 @@ import React from "react";
 import ReactDOM from "react-dom";
 import * as serviceWorker from "./serviceWorker";
 import axios from "axios";
+import {
+  getToken,
+  getRefreshToken,
+  setRefreshToken,
+} from "./components/Helpers/AuthToken";
 import App from "./App";
-axios.defaults.baseURL = "http://localhost:3000/";
+//axios.defaults.baseURL = "http://localhost:3000/";
+
 axios.defaults.headers.common = {
-  Authorization: "Bearer " + localStorage.getItem("token"),
+  Authorization: "Bearer " + getToken(),
 };
 
 ReactDOM.render(<App />, document.getElementById("root"));

@@ -14,8 +14,14 @@ import { toast } from "react-toastify";
 import { UserContext } from "../Context/UserContext";
 import * as pagosService from "./PagosService";
 import { confirmAlert } from "react-confirm-alert"; // Import
+import { Tramites } from "./../Tramites/Tramites";
+import TramiteItem from "./../Alumnos/TramiteItem";
+import * as alumnoService from "../Alumnos/AlumnoService";
+import { PagoContext } from "../Context/PagoContext";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
+type SelectChange = ChangeEvent<HTMLSelectElement>;
 
 interface Props {
   id: any;
@@ -29,20 +35,37 @@ const PagosForm = (props: Props) => {
   const { id, loadPagos } = props;
   const params: any = useParams<Params>();
   const { userData }: any = useContext(UserContext);
+  const { edit, setEdit }: any = useContext(PagoContext);
+
   const initialState = {
-    cantidad: "",
-    nroRecibo: "",
-    //fecha: new Date(),
+    cantidad: 1,
+    nroRecibo: 0,
+    tramites: "",
     estudiante: id,
     registrador: userData.id,
+    stateRenta: false,
+    acuenta: 0,
   };
-
+  //loadEdit();
   const history = useHistory();
-
+  const [tramite, setTramite] = useState<Tramites[]>([]);
   const [pago, setPago] = useState<Pagos>(initialState);
+  const [pagado, setPagado] = useState<Boolean>(false);
 
   const handleInputChange = (e: InputChange) =>
     setPago({ ...pago, [e.target.name]: e.target.value });
+
+  const handleSelectChangeTramite = (e: SelectChange) =>
+    setPago({ ...pago, [e.target.name]: e.target.value });
+
+  const handleCheckedChange = (e: ChangeEvent<HTMLInputElement>) =>
+    setPago({ ...pago, [e.target.name]: e.target.checked });
+
+  const getTramites = async () => {
+    const res: any = await alumnoService.getTramites();
+    setTramite(res.data);
+    //console.log(res.data);
+  };
 
   const handleSubmit = async () => {
     //e.preventDefault();
@@ -53,11 +76,6 @@ const PagosForm = (props: Props) => {
         toast.success("Pago añadido");
         setPago(initialState);
       } catch (e) {
-        if (e.request.status === 404) {
-          toast.error("Ocurrio un problema vuelva a buscar al alumno");
-          return history.push("/alumnos");
-        }
-        //console.log(JSON.parse(e.request.response));
         toast.error(JSON.parse(e.request.response).message);
       }
     } else {
@@ -66,8 +84,8 @@ const PagosForm = (props: Props) => {
         loadPagos();
         toast.success("Pago actualizado");
       } catch (e) {
-        history.push("/alumnos");
-        return toast.error(JSON.parse(e.request.response).message);
+        //history.push("/alumnos");
+        toast.error(JSON.parse(e.request.response).message);
       }
     }
   };
@@ -93,15 +111,30 @@ const PagosForm = (props: Props) => {
   };
   const getPago = async (id: string) => {
     const res = await pagosService.getPago(id);
-    setPago(res.data);
+    //console.log(res.data);
+    setPago({
+      ...res.data,
+      tramites: res.data.tramites.name,
+      registrador: userData.id,
+    });
+    if (res.data.acuenta === res.data.tramites.costo) {
+      setPagado(true);
+    } else {
+      setPagado(false);
+    }
   };
 
   useEffect(() => {
     loadPagos();
+    getTramites();
     setPago({ ...pago, registrador: userData.id });
     if (params.idpago) getPago(params.idpago);
   }, [params.idpago, userData.id]);
-  //isClickObservation
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
+
   return (
     <>
       <div className="col-md-12">
@@ -115,19 +148,34 @@ const PagosForm = (props: Props) => {
               cursor: "pointer",
               fontSize: "20px",
               position: "absolute",
-              marginLeft: "90%",
+              marginLeft: "96.5%",
             }}
           />
           <div className="card-body">
             <div className="row">
               <div className="col-auto">
-                <h4>Registro de pago</h4>
+                {pago._id ? (
+                  <>
+                    {pagado ? (
+                      <>
+                        <h4>PAGO COMPLETO</h4>
+                      </>
+                    ) : (
+                      <>
+                        <h4>Actualizar pago</h4>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <h4>Registrar pago</h4>
+                )}
               </div>
               <div className="col-6">
                 <a
                   style={{
                     position: "absolute",
                     cursor: "pointer",
+                    marginTop: "5px",
                   }}
                   onClick={() => {
                     setPago(initialState);
@@ -144,103 +192,232 @@ const PagosForm = (props: Props) => {
                 <>
                   {userData.role === "Super Admin" ? (
                     <>
-                      <div className="form-group">
-                        <input
-                          type="text"
-                          name="cantidad"
-                          placeholder="Cantidad"
-                          className="form-control"
-                          autoFocus
-                          onChange={handleInputChange}
-                          value={pago.cantidad}
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <input
-                          type="text"
-                          name="nroRecibo"
-                          placeholder="Nro Recibo"
-                          className="form-control"
-                          onChange={handleInputChange}
-                          value={pago.nroRecibo}
-                        />
-                      </div>
-
-                      {/**
-                         * <div className="form-group">
-                        <input
-                          type="date"
-                          name="fecha"
-                          className="form-control"
-                          onChange={handleInputChange}
-                          value={moment(pago.fecha).format("YYYY-MM-DD")}
-                        />
-                      </div>
-                         */}
+                      {pagado ? (
+                        <>EL TRAMITE ESTÁ PAGADO</>
+                      ) : (
+                        <>
+                          <div className="form-group">
+                            <div className="custom-control custom-checkbox">
+                              <input
+                                type="checkbox"
+                                className="custom-control-input"
+                                id="customCheck1"
+                                onChange={handleCheckedChange}
+                                name="stateRenta"
+                                checked={Boolean(pago.stateRenta)}
+                              />
+                              <label
+                                className="custom-control-label"
+                                htmlFor="customCheck1"
+                              >
+                                El alumno está dejando dinero a cuenta ?
+                              </label>
+                            </div>
+                          </div>
+                          {pago.stateRenta ? (
+                            <>
+                              <div className="form-group">
+                                <label htmlFor="exampleSelect1">
+                                  Añadir monto
+                                </label>
+                                <input
+                                  autoComplete="off"
+                                  type="text"
+                                  name="nuevoMonto"
+                                  placeholder="Nuevo monto"
+                                  className="form-control"
+                                  onChange={handleInputChange}
+                                />
+                              </div>
+                            </>
+                          ) : pago.acuenta ? (
+                            (pago.acuenta = 0)
+                          ) : pago.acuenta === 0 ? (
+                            ""
+                          ) : (
+                            ""
+                          )}
+                        </>
+                      )}
                     </>
                   ) : (
                     <>
-                      <div className="form-group">
-                        <textarea
-                          name="observacion"
-                          rows={3}
-                          className="form-control"
-                          placeholder="Observación"
-                          onChange={handleInputChange}
-                          value={pago.observacion}
-                        ></textarea>
-                      </div>
+                      {edit ? (
+                        <>
+                          {pagado ? (
+                            <>EL TRAMITE ESTÁ PAGADO</>
+                          ) : (
+                            <>
+                              <div className="form-group">
+                                <div className="custom-control custom-checkbox">
+                                  <input
+                                    type="checkbox"
+                                    className="custom-control-input"
+                                    id="customCheck1"
+                                    onChange={handleCheckedChange}
+                                    name="stateRenta"
+                                    checked={Boolean(pago.stateRenta)}
+                                  />
+                                  <label
+                                    className="custom-control-label"
+                                    htmlFor="customCheck1"
+                                  >
+                                    El alumno está dejando dinero a cuenta ?
+                                  </label>
+                                </div>
+                              </div>
+                              {pago.stateRenta ? (
+                                <>
+                                  <div className="form-group">
+                                    <label htmlFor="exampleSelect1">
+                                      Añadir monto
+                                    </label>
+                                    <input
+                                      autoComplete="off"
+                                      type="text"
+                                      name="nuevoMonto"
+                                      placeholder="Nuevo monto"
+                                      className="form-control"
+                                      onChange={handleInputChange}
+                                    />
+                                  </div>
+                                </>
+                              ) : pago.acuenta ? (
+                                (pago.acuenta = 0)
+                              ) : pago.acuenta === 0 ? (
+                                ""
+                              ) : (
+                                ""
+                              )}
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <div className="form-group">
+                            <textarea
+                              autoFocus
+                              name="observacion"
+                              rows={3}
+                              className="form-control"
+                              placeholder="Observación"
+                              onChange={handleInputChange}
+                              value={pago.observacion}
+                            ></textarea>
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                 </>
               ) : (
                 <>
                   <div className="form-group">
-                    <input
-                      type="text"
-                      name="cantidad"
-                      placeholder="Cantidad"
-                      className="form-control"
+                    <label htmlFor="exampleSelect1">Tramite</label>
+                    <select
                       autoFocus
-                      onChange={handleInputChange}
-                      value={pago.cantidad}
-                    />
+                      className="form-control"
+                      id="exampleSelect1"
+                      name="tramites"
+                      onChange={handleSelectChangeTramite}
+                      value={pago.tramites}
+                    >
+                      <option value={""} disabled>
+                        Seleccione un tramite
+                      </option>
+                      {tramite.map((tramite) => (
+                        <TramiteItem tramite={tramite} key={tramite._id} />
+                      ))}
+                    </select>
                   </div>
+                  <div className="row">
+                    <div className="form-group col-md-6">
+                      <label htmlFor="exampleSelect1">Unidades</label>
+                      <input
+                        autoComplete="off"
+                        type="text"
+                        name="cantidad"
+                        placeholder="Unidades"
+                        className="form-control"
+                        onChange={handleInputChange}
+                        value={Number(pago.cantidad)}
+                      />
+                    </div>
 
+                    <div className="form-group col-md-6">
+                      <label htmlFor="exampleSelect1">Nº Recibo</label>
+                      <input
+                        autoComplete="off"
+                        type="text"
+                        name="nroRecibo"
+                        placeholder="Nro Recibo"
+                        className="form-control"
+                        onChange={handleInputChange}
+                        value={Number(pago.nroRecibo)}
+                      />
+                    </div>
+                  </div>
                   <div className="form-group">
-                    <input
-                      type="text"
-                      name="nroRecibo"
-                      placeholder="Nro Recibo"
-                      className="form-control"
-                      onChange={handleInputChange}
-                      value={pago.nroRecibo}
-                    />
+                    <div className="custom-control custom-checkbox">
+                      <input
+                        type="checkbox"
+                        className="custom-control-input"
+                        id="customCheck1"
+                        onChange={handleCheckedChange}
+                        name="stateRenta"
+                        checked={Boolean(pago.stateRenta)}
+                      />
+                      <label
+                        className="custom-control-label"
+                        htmlFor="customCheck1"
+                      >
+                        El alumno está dejando dinero a cuenta ?
+                      </label>
+                    </div>
                   </div>
-
-                  {/**
-                     * <div className="form-group">
-                    <input
-                      type="date"
-                      name="fecha"
-                      className="form-control"
-                      onChange={handleInputChange}
-                      value={moment(pago.fecha).format("YYYY-MM-DD")}
-                    />
-                  </div>
-                     * 
-                     */}
+                  {pago.stateRenta ? (
+                    <>
+                      <div className="form-group">
+                        <label htmlFor="exampleSelect1">Monto a cuenta</label>
+                        <input
+                          autoComplete="off"
+                          type="text"
+                          name="acuenta"
+                          value={Number(pago.acuenta)}
+                          placeholder="Dinero a cuenta"
+                          className="form-control"
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </>
+                  ) : pago.acuenta ? (
+                    (pago.acuenta = 0)
+                  ) : pago.acuenta === 0 ? (
+                    ""
+                  ) : (
+                    ""
+                  )}
                 </>
               )}
 
               {params.idpago ? (
-                <button className="btn btn-info" style={{ width: "100%" }}>
-                  Actualizar
-                </button>
+                <>
+                  {pagado ? (
+                    <></>
+                  ) : (
+                    <>
+                      <button
+                        className="btn btn-info"
+                        style={{ width: "100%" }}
+                      >
+                        Actualizar
+                      </button>
+                    </>
+                  )}
+                </>
               ) : (
                 <button className="btn btn-primary" style={{ width: "100%" }}>
-                  Guardar
+                  Registrar
                 </button>
               )}
             </form>

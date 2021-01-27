@@ -7,6 +7,7 @@ import { useHistory } from "react-router-dom";
 import { UserContext } from "../Context/UserContext";
 import { IoLogoWhatsapp } from "react-icons/io";
 import { GoArrowLeft } from "react-icons/go";
+import MostarSesionTerminada from "./../lib/SesionTerminada";
 
 interface Props {
   //setAvtivateVideos: (statud: boolean) => void;
@@ -25,8 +26,6 @@ const VideoList = (props: Props) => {
     setEtapaIV,
     setEtapaTeoricos,
   }: any = props;
-  //console.log(setEtapaII);
-
   const history = useHistory();
 
   const [loading, setLoading] = useState(true);
@@ -36,25 +35,33 @@ const VideoList = (props: Props) => {
   const { userData }: any = useContext(UserContext);
 
   const loadVideos = async () => {
-    const res = await videoService.getVideos();
-    const formatedVideos = res.data;
-    /*.map((video) => {
-        return {
-          ...video,
-          createdAt: video.createdAt ? new Date(video.createdAt) : new Date(),
-          updatedAt: video.updatedAt ? new Date(video.updatedAt) : new Date(),
-        };
-      })
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-       * 
-       */
-    setVideos(formatedVideos);
-    setLoading(false);
+    try {
+      const res = await videoService.getVideos();
+      const formatedVideos = res.data;
+      /*.map((video) => {
+          return {
+            ...video,
+            createdAt: video.createdAt ? new Date(video.createdAt) : new Date(),
+            updatedAt: video.updatedAt ? new Date(video.updatedAt) : new Date(),
+          };
+        })
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+         * 
+         */
+      setVideos(formatedVideos);
+      setLoading(false);
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   useEffect(() => {
     loadVideos();
   }, []);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   if (loading)
     return (

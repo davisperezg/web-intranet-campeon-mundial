@@ -77,12 +77,14 @@ const userSchema = new Schema(
         type: Schema.Types.ObjectId,
       },
     ],
-    tramites: [
+    /**
+    *  tramites: [
       {
         ref: "Tramite",
         type: Schema.Types.ObjectId,
       },
     ],
+    */
     nro: {
       ref: "Sede",
       type: Schema.Types.Number,

@@ -5,6 +5,8 @@ import * as alumnoService from "./AlumnoService";
 import AlumnosItem from "./AlumnosItem";
 import { useHistory } from "react-router-dom";
 import { UserContext } from "../Context/UserContext";
+import AlumnosListDeudores from "./AlumnosListDeudores";
+import MostarSesionTerminada from "./../lib/SesionTerminada";
 
 const AlumnosList = () => {
   const [loading, setLoading] = useState<Boolean>(true);
@@ -13,7 +15,9 @@ const AlumnosList = () => {
   const { userData }: any = useContext(UserContext);
   const [totalAlumnos, setTotalAlumnos] = useState<Number>(0);
   const history = useHistory();
-
+  const [filtro, setFiltro] = useState({
+    deudores: "",
+  });
   const onKeyUpValue = async (event: KeyboardEvent<HTMLInputElement>) => {
     const { value }: any = event.target;
     const res = await alumnoService.getAlumnos();
@@ -27,8 +31,6 @@ const AlumnosList = () => {
         String(alumno.nro).toUpperCase().indexOf(value) >= 0 ||
         String(alumno.sedes[0].name.toLowerCase()).indexOf(value) >= 0 ||
         String(alumno.sedes[0].name.toUpperCase()).indexOf(value) >= 0 ||
-        String(alumno.tramites[0].name.toLowerCase()).indexOf(value) >= 0 ||
-        String(alumno.tramites[0].name.toUpperCase()).indexOf(value) >= 0 ||
         String(alumno.dni).toLowerCase().indexOf(value) >= 0 ||
         String(alumno.dni).toUpperCase().indexOf(value) >= 0
     );
@@ -41,25 +43,43 @@ const AlumnosList = () => {
     }
   };
 
+  const handleCheckedChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFiltro({ ...filtro, [e.target.name]: e.target.checked });
+  };
+
   const loadAlumnos = async () => {
-    const res = await alumnoService.getAlumnos();
-    const formatedVideos = res.data
-      .map((alumno) => {
-        return {
-          ...alumno,
-          createdAt: alumno.createdAt ? new Date(alumno.createdAt) : new Date(),
-          updatedAt: alumno.updatedAt ? new Date(alumno.updatedAt) : new Date(),
-        };
-      })
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    setTotalAlumnos(formatedVideos.length);
-    setAlumnos(formatedVideos);
-    setLoading(false);
+    try {
+      const res = await alumnoService.getAlumnos();
+      const formatedVideos = res.data
+        .map((alumno) => {
+          return {
+            ...alumno,
+            createdAt: alumno.createdAt
+              ? new Date(alumno.createdAt)
+              : new Date(),
+            updatedAt: alumno.updatedAt
+              ? new Date(alumno.updatedAt)
+              : new Date(),
+          };
+        })
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      setTotalAlumnos(formatedVideos.length);
+      setAlumnos(formatedVideos);
+      setLoading(false);
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   useEffect(() => {
     loadAlumnos();
   }, []);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   if (loading)
     return (
@@ -120,41 +140,65 @@ const AlumnosList = () => {
                     className="form-control"
                   />
                 </div>
-                <div className="col-sm-4">
-                  <strong style={{ float: "right" }}>
-                    Total de alumnos {totalAlumnos}
-                  </strong>
+                <div className="col-sm-2">
+                  <div className="form-check">
+                    <label className="form-check-label">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        name="deudores"
+                        onChange={handleCheckedChange}
+                        value={filtro.deudores}
+                      />
+                      Calcular monto deudores
+                    </label>
+                  </div>
                 </div>
+                {filtro.deudores ? (
+                  ""
+                ) : (
+                  <div className="col-sm-2">
+                    <strong style={{ float: "right" }}>
+                      Total de alumnos {totalAlumnos}
+                    </strong>
+                  </div>
+                )}
               </div>
               <br />
 
-              <div className="table-responsive">
-                <table className="table table-bordered">
-                  <thead className="table-active">
-                    <tr>
-                      <th scope="col">Username</th>
-                      <th scope="col">COD</th>
-                      <th scope="col">Alumno</th>
-                      <th scope="col">Sede</th>
-                      <th scope="col">Tramite</th>
-                      <th scope="col">D.N.I</th>
-
-                      <th scope="col">Fecha Creada</th>
-                      <th scope="col">Fecha Actualizada</th>
-                      <th scope="col">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody className="table-light">
-                    {alumnos.map((alumno) => (
-                      <AlumnosItem
-                        alumno={alumno}
-                        key={alumno._id}
-                        loadAlumnos={loadAlumnos}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {filtro.deudores ? (
+                <>
+                  <AlumnosListDeudores busqueda={Boolean(filtro.deudores)} />
+                </>
+              ) : (
+                <>
+                  <div className="table-responsive">
+                    <table className="table table-bordered">
+                      <thead className="table-active">
+                        <tr>
+                          <th scope="col">Username</th>
+                          <th scope="col">COD</th>
+                          <th scope="col">Alumno</th>
+                          <th scope="col">Sede</th>
+                          <th scope="col">D.N.I</th>
+                          <th scope="col">Fecha Creada</th>
+                          <th scope="col">Fecha Actualizada</th>
+                          <th scope="col">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="table-light">
+                        {alumnos.map((alumno) => (
+                          <AlumnosItem
+                            alumno={alumno}
+                            key={alumno._id}
+                            loadAlumnos={loadAlumnos}
+                          />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

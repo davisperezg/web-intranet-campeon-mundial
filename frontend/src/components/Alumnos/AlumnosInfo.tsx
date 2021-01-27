@@ -5,6 +5,7 @@ import { Alumno } from "./Alumno";
 import * as alumnoService from "./AlumnoService";
 import moment from "moment";
 import { UserContext } from "../Context/UserContext";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 interface Params {
   id?: string;
@@ -47,7 +48,6 @@ const AlumnoInfo = () => {
       startClasses,
       endClasses,
       sedes: res.data.sedes[0].name,
-      tramites: res.data.tramites[0].name,
       createdAt,
       updatedAt,
       address,
@@ -58,6 +58,10 @@ const AlumnoInfo = () => {
   useEffect(() => {
     if (params.id) getAlumno(params.id);
   }, [params.id]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   return (
     <div className="row">
@@ -110,12 +114,14 @@ const AlumnoInfo = () => {
                 <br />
                 {alumno.sedes}
               </div>
-              <div className="col-2">
+              {/**
+                 * <div className="col-2">
                 <strong>Tramite</strong>
                 <br />
                 <br />
                 {alumno.tramites}
               </div>
+                 */}
               {alumno.startClasses && alumno.endClasses ? (
                 <>
                   <div className="col-2">

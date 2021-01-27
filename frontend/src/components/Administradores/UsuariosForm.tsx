@@ -21,6 +21,7 @@ import { Roles } from "./../Roles/Roles";
 import { confirmAlert } from "react-confirm-alert"; // Import
 import moment from "moment";
 import { UserContext } from "../Context/UserContext";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 type SelectChange = ChangeEvent<HTMLSelectElement>;
@@ -38,6 +39,7 @@ const AdministradoresForm = () => {
     cellphone: "",
     sedes: [] || "",
   };
+  //s
   const { userData }: any = useContext(UserContext);
 
   const history = useHistory();
@@ -82,7 +84,7 @@ const AdministradoresForm = () => {
           return toast.error("No se encontró D.N.I");
         }
 
-        //let din: number = ref.current.value;
+        //let s di:n umber = ref.current.value ;
         setAdmin({
           nombres:
             res.data.nombres +
@@ -287,6 +289,11 @@ const AdministradoresForm = () => {
     if (params.id) getAdmi(params.id);
   }, [params.id]);
   //offset-md-8
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
+
   if (params.id) {
     return (
       <div className="row">

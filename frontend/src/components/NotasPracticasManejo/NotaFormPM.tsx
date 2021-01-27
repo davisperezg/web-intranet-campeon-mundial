@@ -12,6 +12,7 @@ import { NotasPracticaManejo } from "./NotasPracticasManejo";
 import * as notasPracticasService from "./NotasPracticaManejoService";
 import { toast } from "react-toastify";
 import { confirmAlert } from "react-confirm-alert"; // Import
+import MostarSesionTerminada from "./../lib/SesionTerminada";
 
 interface Params {
   id?: string;
@@ -82,6 +83,11 @@ const NotasFormPM = () => {
   useEffect(() => {
     setNota({ ...nota, registrador: userData.id });
   }, [userData.id]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
+
   return (
     <>
       <div className="row">

@@ -44,6 +44,7 @@ export const postTramite: RequestHandler = async (req, res) => {
 };
 
 export const getTramites: RequestHandler = async (req, res) => {
+  console.log(req.user);
   const JustTramitesOne = await Tramite.find({ status: { $in: 1 } });
   if (!JustTramitesOne) return res.status(204).json();
   res.status(200).json(JustTramitesOne);

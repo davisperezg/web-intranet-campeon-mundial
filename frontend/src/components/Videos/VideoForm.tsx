@@ -1,9 +1,17 @@
-import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import React, {
+  ChangeEvent,
+  useContext,
+  FormEvent,
+  useEffect,
+  useState,
+} from "react";
 import { useHistory, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import * as videoService from "./videoService";
 import { Video } from "./Video";
 import { GoArrowLeft } from "react-icons/go";
+import MostarSesionTerminada from "../lib/SesionTerminada";
+import { UserContext } from "../Context/UserContext";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 type SelectChange = ChangeEvent<HTMLSelectElement>;
@@ -20,6 +28,7 @@ const VideoForm = () => {
   };
 
   const [video, setVideo] = useState<Video>(initialState);
+  const { userData, setUserData }: any = useContext(UserContext);
 
   const history = useHistory();
   const params = useParams<Params>();
@@ -63,6 +72,11 @@ const VideoForm = () => {
       [e.target.name]: e.target.value,
     });
   };
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
+
   return (
     <div className="row">
       <div className="col-md-4 offset-md-4">

@@ -4,7 +4,7 @@ const tramitechema = new Schema(
   {
     name: { type: String, required: true, trim: true },
     status: { type: Number, required: true, trim: true },
-    costo: { type: String, required: true, trim: true },
+    costo: { type: Number, required: true, trim: true },
   },
 
   {

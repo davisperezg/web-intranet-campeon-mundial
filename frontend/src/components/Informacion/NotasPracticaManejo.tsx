@@ -4,6 +4,7 @@ import * as practicasManejoService from "../NotasPracticasManejo/NotasPracticaMa
 import { UserContext } from "../Context/UserContext";
 import { GoArrowLeft } from "react-icons/go";
 import InfoNotaPracticaAlumnoItem from "./NotasPracticaManejoItem";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 interface Props {
   setActivatePrincipal: (statud: boolean) => void;
@@ -27,6 +28,9 @@ const NotasPracticaManejoInfo = (props: Props) => {
     loadPracticas();
   }, [loadPracticas]);
 
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
   return (
     <>
       <div className="row">

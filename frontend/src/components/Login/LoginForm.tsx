@@ -10,7 +10,12 @@ import { useHistory } from "react-router-dom";
 import "./LoginForm.css";
 import { UserContext } from "../Context/UserContext";
 import * as LoginService from "./LoginService";
-import { deleteToken, getToken, setToken } from "../Helpers/AuthToken";
+import {
+  deleteToken,
+  getToken,
+  setRefreshToken,
+  setToken,
+} from "../Helpers/AuthToken";
 import { toast } from "react-toastify";
 const LoginForm = () => {
   //userData
@@ -29,10 +34,11 @@ const LoginForm = () => {
     try {
       const res = await LoginService.postLogin(login.username, login.password);
       setToken(res.data.token);
-      //location.hash("/");
+      setRefreshToken(res.data.refreshToken);
       window.location.href = "/";
       //history.push("/");
     } catch (e) {
+      console.log(e);
       toast.error(JSON.parse(e.request.response).message);
     }
   };

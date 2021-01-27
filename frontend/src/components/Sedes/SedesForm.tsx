@@ -1,9 +1,17 @@
-import React, { ChangeEvent, useState, useEffect, FormEvent } from "react";
+import React, {
+  useContext,
+  ChangeEvent,
+  useState,
+  useEffect,
+  FormEvent,
+} from "react";
 import { useHistory, useParams } from "react-router-dom";
 import * as SedesService from "./SedesService";
 import { Sedes } from "./Sedes";
 import { toast } from "react-toastify";
 import { GoArrowLeft } from "react-icons/go";
+import { UserContext } from "../Context/UserContext";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
@@ -15,6 +23,7 @@ const SedesForm = () => {
   const initialState = {
     seq: "",
   };
+  const { userData, setUserData }: any = useContext(UserContext);
 
   const [sede, setSede]: any = useState<Sedes>(initialState);
   const history = useHistory();
@@ -40,6 +49,11 @@ const SedesForm = () => {
   useEffect(() => {
     if (params.id) getSede(params.id);
   }, [params.id]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
+
   return (
     <>
       <div className="row">

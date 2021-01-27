@@ -15,6 +15,8 @@ import { GoArrowLeft } from "react-icons/go";
 import * as citaService from "./CitaService";
 import { toast } from "react-toastify";
 import { UserContext } from "../Context/UserContext";
+import { generatePDFCita } from "../lib/FichaMatriculaPDF";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 type SelectChange = ChangeEvent<HTMLSelectElement>;
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
@@ -55,7 +57,8 @@ const CitaForm = () => {
     e.preventDefault();
     if (!params.id) {
       try {
-        await citaService.createNewCita(cita);
+        const dataCita: any = await citaService.createNewCita(cita);
+        generatePDFCita(String(dataCita.data._id));
         setCita(initialState);
         toast.success("Cita añadida");
         history.push("/citas");
@@ -85,6 +88,11 @@ const CitaForm = () => {
     if (params.id) getCita(params.id);
     loadAlumnos();
   }, [params.id, userData.id]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
+
   return (
     <>
       <div className="row">

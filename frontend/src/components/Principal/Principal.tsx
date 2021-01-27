@@ -1,23 +1,27 @@
 import React, { useContext, useEffect, useState } from "react";
-
 import { useHistory } from "react-router-dom";
 import { UserContext } from "../Context/UserContext";
 import { IoLogoWhatsapp } from "react-icons/io";
 import VideoList from "../Videos/VideoList";
 import { GoArrowLeft } from "react-icons/go";
-
+import MostarSesionTerminada from "./../lib/SesionTerminada";
 const Principal = () => {
   const [isActivateVideos, setAvtivateVideos] = useState<Boolean>(true);
 
   const history = useHistory();
-  const { userData }: any = useContext(UserContext);
+  const { userData, setUserData }: any = useContext(UserContext);
   const [isEtapaI, setEtapaI] = useState<any>("");
   const [isEtapaII, setEtapaII] = useState<any>("");
   const [isEtapaIII, setEtapaIII] = useState<any>("");
   const [isEtapaIV, setEtapaIV] = useState<any>("");
   const [isEtapaTeoricos, setIsEtapaTeoricos] = useState<any>("");
-
   const [isShowRegresar, setShowRegresar] = useState<Boolean>(false);
+
+  //CargaUser();
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   return (
     <>

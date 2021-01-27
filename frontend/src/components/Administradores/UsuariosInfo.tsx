@@ -5,6 +5,7 @@ import { Alumno } from "../Alumnos/Alumno";
 import * as adminService from "./UsuariosService";
 import moment from "moment";
 import { UserContext } from "../Context/UserContext";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 interface Params {
   id?: string;
@@ -55,6 +56,10 @@ const AdministradorInfo = () => {
   useEffect(() => {
     if (params.id) getAdmin(params.id);
   }, [params.id]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   return (
     <div className="row">

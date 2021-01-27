@@ -17,6 +17,7 @@ import AsistenciaItem from "./AsistenciaItem";
 import { GoSync } from "react-icons/go";
 import moment from "moment";
 import { UserContext } from "../Context/UserContext";
+import MostarSesionTerminada from "../lib/SesionTerminada";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 type SelectChange = ChangeEvent<HTMLSelectElement>;
@@ -120,6 +121,10 @@ const AsistenciaForm = () => {
       loadAlumno();
     }
   }, [params.id, loadAsistencias, loadAlumno, asistenciaIngreso.estudiante]);
+
+  if (userData.state === false) {
+    return <MostarSesionTerminada />;
+  }
 
   return (
     <>
