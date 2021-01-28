@@ -144,6 +144,8 @@ export async function generatePDF(id: string) {
   var notasS = [];
   var asistencias = [];
   var practicas = [];
+  var altura = 70;
+
   for (var p = 0; p < resPago.data.length; p++) {
     pagos.push([
       String(resPago.data[p].tramites.name).toUpperCase(),
@@ -271,16 +273,20 @@ export async function generatePDF(id: string) {
     columns: ["Tipo - 2da", "Nota - 2da", "Fecha - 2da"],
     body: notasS,
   });
+
+  doc.text("ASISTENCIA - TEORIA Y LIBROS: ", 10, altura);
   doc.autoTable({
     tableWidth: 190,
-    //startY: 240,
+    startY: altura + 5,
     margin: { left: 10 },
     columns: ["Fecha", "Ingreso", "Salida", "Alumno", "Capitulo"],
     body: asistencias,
   });
+  doc.text("PRACTICAS - HORARIO: ", 10, (altura += altura));
 
   doc.autoTable({
     tableWidth: 190,
+    startY: altura + 5,
     margin: { left: 10 },
     columns: [
       "Nro Practica",
