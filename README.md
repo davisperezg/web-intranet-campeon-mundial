@@ -1,6 +1,6 @@
 # Intranet Campeón Mundial
 
-Sistema intranet. se implementó con el objetivo de optimizar el proceso de matricula hacia estudiantes de la escuela de manejo campeón mundial.
+Sistema intranet. se implementó con el objetivo de optimizar el proceso de matricula para estudiantes de la escuela de manejo campeón mundial.
 
 # Herramientas utilizadas:
 
