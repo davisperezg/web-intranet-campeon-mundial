@@ -16,7 +16,7 @@ Sistema intranet. se implementó con el objetivo de optimizar el proceso de matr
 * Login.
 
 <p align="center">
-  <img src="https://i.ibb.co/9tBj4QG/Login.png" title="Login">
+  <img src="https://i.ibb.co/FHSFZyF/Login.png" title="Login">
 </p>
 * Consulta Pagos.
 
