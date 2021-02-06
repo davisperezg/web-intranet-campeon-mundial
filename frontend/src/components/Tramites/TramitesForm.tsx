@@ -65,10 +65,6 @@ const TramiteForm = () => {
     if (params.id) getTramite(params.id);
   }, [params.id]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <div className="row">

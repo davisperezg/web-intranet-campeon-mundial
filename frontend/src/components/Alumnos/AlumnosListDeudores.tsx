@@ -55,7 +55,6 @@ const AlumnosListDeudores = (props: Props) => {
 
   const loadFiltro = useCallback(async () => {
     const res = await cajaService.getIngresos();
-    console.log(res.data);
     if (Boolean(busqueda) === true) {
       if (
         Boolean(busqueda) === true &&
@@ -336,10 +335,6 @@ const AlumnosListDeudores = (props: Props) => {
   useEffect(() => {
     loadFiltro();
   }, [loadFiltro]);
-
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
 
   return (
     <>

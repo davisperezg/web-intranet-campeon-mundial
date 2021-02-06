@@ -77,10 +77,6 @@ const AlumnosList = () => {
     loadAlumnos();
   }, []);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   if (loading)
     return (
       <div className="row">
@@ -140,20 +136,24 @@ const AlumnosList = () => {
                     className="form-control"
                   />
                 </div>
-                <div className="col-sm-2">
-                  <div className="form-check">
-                    <label className="form-check-label">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        name="deudores"
-                        onChange={handleCheckedChange}
-                        value={filtro.deudores}
-                      />
-                      Calcular monto deudores
-                    </label>
+                {userData.role === "Profesor" ? (
+                  ""
+                ) : (
+                  <div className="col-sm-2">
+                    <div className="form-check">
+                      <label className="form-check-label">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          name="deudores"
+                          onChange={handleCheckedChange}
+                          value={filtro.deudores}
+                        />
+                        Calcular monto deudores
+                      </label>
+                    </div>
                   </div>
-                </div>
+                )}
                 {filtro.deudores ? (
                   ""
                 ) : (

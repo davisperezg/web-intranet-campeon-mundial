@@ -19,6 +19,10 @@ const citasSchema = new Schema(
       type: Date,
       requerid: true,
     },
+    fechaTermino: {
+      type: Date,
+      requerid: true,
+    },
   },
   {
     versionKey: false,

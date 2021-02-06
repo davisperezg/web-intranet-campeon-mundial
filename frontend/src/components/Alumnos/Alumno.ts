@@ -7,11 +7,12 @@ export interface Alumno {
   registrador?: string;
   nombres: string;
   username: string;
-  email: string;
+  email?: string;
   password?: string;
   dni: string;
   cellphone: string;
   address?: string;
+  facebook?: string;
   telephone?: string;
   startClasses?: string;
   endClasses?: string;

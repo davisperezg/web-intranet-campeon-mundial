@@ -123,15 +123,11 @@ const HorarioForm = () => {
     }
   }, [params.id, practicas.estudiante, loadAlumno, loadPracticas]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <div className="card">
         <div className="card-header">
-          Practicas Horario
+          Horario de practicas
           <GoSync
             onClick={() => {
               setPracticas(initialState);

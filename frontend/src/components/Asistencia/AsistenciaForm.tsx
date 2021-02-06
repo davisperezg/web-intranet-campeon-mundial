@@ -122,10 +122,6 @@ const AsistenciaForm = () => {
     }
   }, [params.id, loadAsistencias, loadAlumno, asistenciaIngreso.estudiante]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <div className="card">

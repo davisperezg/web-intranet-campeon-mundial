@@ -59,10 +59,6 @@ const VideoList = (props: Props) => {
     loadVideos();
   }, []);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   if (loading)
     return (
       <div className="row">

@@ -4,7 +4,6 @@ import Tramite from "../models/Tramite";
 export const deleteTramite: RequestHandler = async (req, res) => {
   //console.log(req.body)
   const consultTramite: any = await Tramite.findById(req.params.id);
-  console.log(consultTramite);
   const dataUpdated = {
     status: 2,
   };
@@ -32,7 +31,6 @@ export const updateTramite: RequestHandler = async (req, res) => {
 };
 
 export const postTramite: RequestHandler = async (req, res) => {
-  console.log(req.body);
   const { name, costo } = req.body;
   const newTramite = new Tramite({
     name,
@@ -44,7 +42,6 @@ export const postTramite: RequestHandler = async (req, res) => {
 };
 
 export const getTramites: RequestHandler = async (req, res) => {
-  console.log(req.user);
   const JustTramitesOne = await Tramite.find({ status: { $in: 1 } });
   if (!JustTramitesOne) return res.status(204).json();
   res.status(200).json(JustTramitesOne);

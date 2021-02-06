@@ -5,6 +5,7 @@ export interface Cita {
   estudiante: string | Alumno;
   registrador: string | User;
   fecha: string | Date;
+  fechaTermino: string | Date;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }

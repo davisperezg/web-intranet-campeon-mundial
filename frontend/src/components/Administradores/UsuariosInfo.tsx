@@ -57,10 +57,6 @@ const AdministradorInfo = () => {
     if (params.id) getAdmin(params.id);
   }, [params.id]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <div className="row">
       <div className="col-md-12">

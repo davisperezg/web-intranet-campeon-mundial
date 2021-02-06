@@ -193,10 +193,6 @@ const NotasForm = () => {
     loadAlumno,
   ]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <div className="card">

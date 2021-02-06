@@ -2,12 +2,13 @@ import { Response, RequestHandler } from "express";
 import Citas from "../models/Citas";
 
 export const createCita: RequestHandler = async (req, res) => {
-  const { estudiante, registrador, fecha } = req.body;
+  const { estudiante, registrador, fecha, fechaTermino } = req.body;
 
   const newCita = new Citas({
     estudiante,
     registrador,
     fecha,
+    fechaTermino,
     estado: 1,
   });
 
@@ -27,15 +28,36 @@ export const updateCita: RequestHandler = async (req, res) => {
 };
 
 export const getCitas: RequestHandler = async (req, res) => {
-  try {
-    const citas = await Citas.find({
-      estado: 1,
-    })
-      .populate("registrador", "nombres")
-      .populate("estudiante", "nombres nro");
-    res.status(200).json(citas);
-  } catch (error) {
-    res.json(error);
+  const { id, role }: any = req.user;
+  if (role === "Super Admin") {
+    try {
+      const citas = await Citas.find({
+        estado: 1,
+      })
+        .populate("registrador", "nombres")
+        .populate("estudiante", "nombres nro");
+
+      res.status(200).json(citas);
+    } catch (error) {
+      res.json(error);
+    }
+  }
+  if (role === "Admin") {
+    try {
+      const citas = await Citas.find({
+        estado: 1,
+      })
+        .populate("registrador", "nombres")
+        .populate("estudiante", "nombres nro")
+        .where("registrador")
+        .equals(id);
+
+      res.status(200).json(citas);
+    } catch (error) {
+      res.json(error);
+    }
+  } else {
+    return res.status(401).json("Acceso denegado");
   }
 };
 
@@ -47,7 +69,6 @@ export const getCitasXalumno: RequestHandler = async (req, res) => {
     })
       .populate("registrador", "nombres")
       .populate("estudiante", "nombres nro");
-    console.log(citasXalumno);
     res.status(200).json(citasXalumno);
   } catch (error) {
     res.json(error);

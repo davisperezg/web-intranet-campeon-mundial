@@ -25,7 +25,6 @@ export const signUp: RequestHandler = async (req, res) => {
     telephone,
   } = req.body;
   if (password === undefined) {
-    console.log("es undefined");
     return res
       .status(400)
       .json({ password: { message: "Completar Password" } });
@@ -77,6 +76,7 @@ export const signUp: RequestHandler = async (req, res) => {
     return res.status(400).json(e);
   }
 };
+
 var refreshTokens: any = {};
 
 export const signIn: RequestHandler = async (req, res) => {
@@ -195,7 +195,6 @@ export const updateUser: RequestHandler = async (
   //buscar al usuario por params id
   const userFound: any = await Users.findById(req.params.id);
   //despejo roles y password para validar
-  console.log(req.body);
   const { roles, password } = req.body;
   if (password) {
     //encriptamos la contrasenia almacenando en una variable y

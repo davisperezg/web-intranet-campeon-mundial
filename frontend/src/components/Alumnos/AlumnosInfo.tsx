@@ -59,10 +59,6 @@ const AlumnoInfo = () => {
     if (params.id) getAlumno(params.id);
   }, [params.id]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <div className="row">
       <div className="col-md-12">

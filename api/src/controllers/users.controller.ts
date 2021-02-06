@@ -2,7 +2,6 @@ import { Response, RequestHandler } from "express";
 import ContUsername from "../models/ContUsername";
 import Roles from "../models/Roles";
 import Sedes from "../models/Sedes";
-import Tramite from "../models/Tramite";
 import Users from "../models/Users";
 import PasswordUtils from "../utils/PasswordBcrypt";
 
@@ -38,11 +37,12 @@ export const getStudent: RequestHandler = async (req, res) => {
 //registra alumnos o estudiantes
 export const newStudent: RequestHandler = async (req, res) => {
   const {
+    facebook,
     password,
     dni,
+    email,
     nombres,
     username,
-    email,
     cellphone,
     telephone,
     address,
@@ -52,15 +52,15 @@ export const newStudent: RequestHandler = async (req, res) => {
     //tramites,
     registrador,
   } = req.body;
-
   const hashedPassword: string = await PasswordUtils.encryptPassword(password);
 
   const newStudent: any = new Users({
+    facebook,
     password: hashedPassword,
     dni,
+    email,
     nombres,
     username,
-    email,
     cellphone,
     telephone,
     address,
@@ -115,7 +115,7 @@ export const newStudent: RequestHandler = async (req, res) => {
   try {
     const dataRegistro = await newStudent.save();
     await incNumSeqSede();
-    res.status(200).json(dataRegistro);
+    return res.status(200).json(dataRegistro);
   } catch (e) {
     console.log(e);
     return res.status(400).json(e);

@@ -23,7 +23,18 @@ const CitaItem = (props: Props) => {
         <td>{cita.estudiante.nombres}</td>
         <td>{cita.registrador.nombres}</td>
         <td>
+          {moment(cita.createdAt).format("DD/MM/YYYY - hh:mm A").toUpperCase()}
+        </td>
+        <td>
+          {moment(cita.updatedAt).format("DD/MM/YYYY - hh:mm A").toUpperCase()}
+        </td>
+        <td>
           {moment(cita.fecha)
+            .format("dddd, DD/MM/YYYY - hh:mm A")
+            .toUpperCase()}
+        </td>
+        <td>
+          {moment(cita.fechaTermino)
             .format("dddd, DD/MM/YYYY - hh:mm A")
             .toUpperCase()}
         </td>

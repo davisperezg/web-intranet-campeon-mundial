@@ -102,10 +102,6 @@ const DocumentosForm = (props: Props) => {
     if (params.iddocumento) getDocumento(params.iddocumento);
   }, [params.iddocumento]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <div className="col-md-12">

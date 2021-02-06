@@ -55,22 +55,6 @@ import MostarSesionTerminada from "./components/lib/SesionTerminada";
 //axios.defaults.baseURL = `${process.env.REACT_APP_API}/`;
 
 const PrivateRoute = ({ component, isAuthenticated, ...rest }: any) => {
-  const CargaUser = () => {
-    const { setUserData }: any = useContext(UserContext);
-
-    const cargaUsuario = async () => {
-      try {
-        await userService.getData();
-      } catch (e) {
-        setUserData({ state: false });
-      }
-    };
-    useEffect(() => {
-      cargaUsuario();
-    }, [cargaUsuario]);
-  };
-  CargaUser();
-
   const routeComponent = (props: any) =>
     getToken() ? (
       createElement(component, props)
@@ -92,21 +76,6 @@ const VerifyTokenLogin = ({ component, isAuthenticated, ...rest }: any) => {
   return <Route {...rest} render={routeComponent} />;
 };
 const VerifyTokenDashboard = ({ component, isAuthenticated, ...rest }: any) => {
-  const CargaUser = () => {
-    const { setUserData }: any = useContext(UserContext);
-
-    const cargaUsuario = async () => {
-      try {
-        await userService.getData();
-      } catch (e) {
-        setUserData({ state: false });
-      }
-    };
-    useEffect(() => {
-      cargaUsuario();
-    }, [cargaUsuario]);
-  };
-  CargaUser();
   const routeComponent = (props: any) =>
     getToken() ? (
       createElement(component, props)
@@ -126,16 +95,8 @@ export default function App() {
       localStorage.setItem("username", userFound.data.username.toLowerCase());
     } catch (e) {
       deleteToken();
-      let username: any = localStorage.getItem("username");
-      try {
-        const dice: any = await userService.postRefresh(
-          username,
-          getRefreshToken()
-        );
-        setToken(dice.data.token);
-      } catch (e) {
-        console.log(e);
-      }
+      deleteRefreshToken();
+      localStorage.removeItem("username");
     }
   };
 

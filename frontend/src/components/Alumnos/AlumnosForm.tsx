@@ -6,6 +6,8 @@ import React, {
   FormEvent,
   KeyboardEvent,
   useEffect,
+  useLayoutEffect,
+  useCallback,
   useContext,
 } from "react";
 import { generatePDF } from "../lib/FichaMatriculaPDF";
@@ -26,6 +28,7 @@ import * as pagosService from "../Pagos/PagosService";
 import { Documentos } from "./../Documentos/Documentos";
 import * as documentoService from "../Documentos/DocumentosService";
 import MostarSesionTerminada from "../lib/SesionTerminada";
+import { numberFormat } from "./../lib/index";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 type SelectChange = ChangeEvent<HTMLSelectElement>;
@@ -42,14 +45,14 @@ const AlumnosForm = () => {
   const initialState = {
     nombres: "",
     username: "",
-    email: "",
     dni: "",
     cellphone: "",
     startClasses: "",
     endClasses: "",
-    sedes: [] || "",
+    sedes: "default",
     //tramites: [] || "",
     registrador: "",
+    password: "",
   };
 
   const initialStatePago = {
@@ -88,6 +91,8 @@ const AlumnosForm = () => {
   const [step2, setStep2] = useState<Boolean>(false);
   const [step3, setStep3] = useState<Boolean>(false);
   const [documento, setDocumento] = useState<Documentos>(initialStateDocu);
+  const [total, setTotal] = useState<Number>(0);
+  const [resta, setResta] = useState<Number>(0);
 
   //const [dataDNi, setDataDNI]: any = useState(initialState_user);
   const [isActive, setActive] = useState({
@@ -99,7 +104,12 @@ const AlumnosForm = () => {
   const hanldeClickCircle = () => {
     setActive({ circle: !isActive.circle });
   };
-
+  const consultTotalTramite = () => {
+    const res = tramite.filter((tramit) =>
+      tramit.name === pago.tramites ? tramit.costo : ""
+    );
+    console.log(Number(res));
+  };
   const [isActive2, setActive2] = useState({
     circle: true,
   });
@@ -144,7 +154,9 @@ const AlumnosForm = () => {
           return toast.error("No se encontró D.N.I");
         }
         const username = async () => {
-          return "E" + ano + (await consultSeq());
+          let fecha: String = moment().format("MMM");
+          let extraeLetra = fecha.substring(0, 1);
+          return extraeLetra.toUpperCase() + ano + (await consultSeq());
         }; //await username()
 
         //let din: number = ref.current.value;
@@ -156,13 +168,12 @@ const AlumnosForm = () => {
             " " +
             res.data.apellido_materno,
           username: await username(),
-          email: "",
           password: "",
           dni: alumno.dni,
           cellphone: "",
           startClasses: "",
           endClasses: "",
-          sedes: "",
+          sedes: "default",
           registrador: userData.id,
         });
         setIsReadonlyDNI(false);
@@ -198,8 +209,10 @@ const AlumnosForm = () => {
   const handleSelectChangeSede = (e: SelectChange) =>
     setAlumno({ ...alumno, [e.target.name]: e.target.value });
 
-  const handleSelectChangeTramite = (e: SelectChange) =>
+  const handleSelectChangeTramite = (e: SelectChange) => {
     setPago({ ...pago, [e.target.name]: e.target.value });
+    consultTotalTramite();
+  };
 
   const handleSubmit = async () => {
     //e.preventDefault();
@@ -215,15 +228,6 @@ const AlumnosForm = () => {
         ) {
           return toast.error("Completar sede");
         }
-        /** PARCHANDO NUEVO FORM
-         * if (
-          alumno.tramites === "" ||
-          alumno.tramites === null ||
-          alumno.tramites === undefined
-        ) {
-          return toast.error("Completar tramite");
-        }
-         */
         const resRegistro = await alumnoService.createNewAlumnos(alumno);
         localStorage.setItem("usuarioRegistro", resRegistro.data._id);
         await alumnoService.updateNroOfUsername();
@@ -246,8 +250,6 @@ const AlumnosForm = () => {
             return toast.error("El username ya existe");
           } else if (JSON.parse(e.request.response).keyValue.dni) {
             return toast.error("El D.N.I ya pertenece a un usuario");
-          } else if (JSON.parse(e.request.response).keyValue.email) {
-            return toast.error("El email ya pertenece a un usuario");
           } else if (JSON.parse(e.request.response).keyValue.cellphone) {
             return toast.error("El celular ya pertenece a un usuario");
           }
@@ -263,10 +265,6 @@ const AlumnosForm = () => {
           } else if (JSON.parse(e.request.response).errors.username) {
             return toast.error(
               JSON.parse(e.request.response).errors.username.message
-            );
-          } else if (JSON.parse(e.request.response).errors.email) {
-            return toast.error(
-              JSON.parse(e.request.response).errors.email.message
             );
           } else if (JSON.parse(e.request.response).errors.cellphone) {
             return toast.error(
@@ -304,6 +302,7 @@ const AlumnosForm = () => {
     const res: any = await alumnoService.getAlumno(id);
     //console.log(res.data);
     const {
+      facebook,
       nombres,
       username,
       email,
@@ -315,6 +314,7 @@ const AlumnosForm = () => {
       telephone,
     } = res.data;
     setAlumno({
+      facebook,
       nombres,
       username,
       email,
@@ -462,15 +462,24 @@ const AlumnosForm = () => {
     });
   };
 
+  const calcTotal = useCallback(async () => {
+    const res: any = await alumnoService.getTramites();
+    const tramite = res.data
+      .filter((tramite: any) => tramite.name === pago.tramites)
+      .map((item: any) => item.costo);
+    let sumaTotal = Number(tramite) * Number(pago.cantidad);
+    let restaTotal = Number(pago.acuenta)
+      ? sumaTotal - Number(pago.acuenta)
+      : 0;
+    setTotal(sumaTotal);
+    setResta(restaTotal);
+  }, [pago.tramites, pago.cantidad, pago.acuenta]);
+
   useEffect(() => {
+    calcTotal();
     getTramites();
     if (params.id) getAlumno(params.id);
-  }, [params.id, userData.id]);
-  //offset-md-8
-
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
+  }, [calcTotal, params.id, userData.id]);
 
   if (params.id) {
     return (
@@ -556,10 +565,21 @@ const AlumnosForm = () => {
                   <input
                     type="email"
                     name="email"
-                    placeholder="Correo electronico"
+                    placeholder="Correo electronico (opcional)"
                     className="form-control"
                     onChange={handleInputChange}
                     value={alumno.email}
+                    readOnly={false}
+                  />
+                </div>
+                <div className="form-group">
+                  <input
+                    type="text"
+                    name="facebook"
+                    placeholder="Facebook (opcional)"
+                    className="form-control"
+                    onChange={handleInputChange}
+                    value={alumno.facebook}
                     readOnly={false}
                   />
                 </div>
@@ -793,7 +813,7 @@ const AlumnosForm = () => {
                         placeholder="Paswword"
                         className="form-control"
                         onChange={handleInputChange}
-                        //value={alumno.password}
+                        value={alumno.password}
                         readOnly={isReadonly}
                       />
                     </div>
@@ -802,10 +822,21 @@ const AlumnosForm = () => {
                     <input
                       type="email"
                       name="email"
-                      placeholder="Correo electronico"
+                      placeholder="Correo electronico (opcional)"
                       className="form-control"
                       onChange={handleInputChange}
                       value={alumno.email}
+                      readOnly={isReadonly}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <input
+                      type="text"
+                      name="facebook"
+                      placeholder="Facebook (opcional)"
+                      className="form-control"
+                      onChange={handleInputChange}
+                      value={alumno.facebook}
                       readOnly={isReadonly}
                     />
                   </div>
@@ -881,9 +912,9 @@ const AlumnosForm = () => {
                       name="sedes"
                       disabled={isReadonly}
                       onChange={handleSelectChangeSede}
-                      defaultValue={"NOSELECT"}
+                      value={String(alumno.sedes)}
                     >
-                      <option value="NOSELECT" disabled>
+                      <option value="default" disabled>
                         Seleccione una sede
                       </option>
                       <option value="Huacho">Huacho</option>
@@ -954,6 +985,33 @@ const AlumnosForm = () => {
                       className="form-control"
                       onChange={handleInputChangePago}
                       value={Number(pago.cantidad)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="exampleSelect1">Total</label>
+                    <input
+                      type="text"
+                      placeholder="Buscar tramite"
+                      className="form-control"
+                      disabled={true}
+                      //onChange={handleInputChangePago}
+                      value={numberFormat(Number(total))}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="exampleSelect1">Resta</label>
+                    <input
+                      type="text"
+                      placeholder="Buscar tramite"
+                      className="form-control"
+                      disabled={true}
+                      //onChange={handleInputChangePago}
+                      value={
+                        Number(resta) < 0
+                          ? "El monto a cuenta no puede ser mayor al TOTAL"
+                          : numberFormat(Number(resta))
+                      }
                     />
                   </div>
 

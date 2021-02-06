@@ -66,10 +66,6 @@ const EgresoForm = () => {
     setEgreso({ ...egreso, registrador: userData.id });
   }, [userData.id]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <div className="row">

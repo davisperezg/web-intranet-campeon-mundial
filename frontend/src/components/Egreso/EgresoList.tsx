@@ -54,15 +54,12 @@ const EgresoList = () => {
 
   const loadEgresosXadmin = async (id: string) => {
     const res = await egresoService.getEgresosXAdmin(id);
-    console.log(res.data);
-    var f = new Date();
-    var fecha = f.getFullYear() + "-" + f.getMonth() + 1 + "-" + f.getDate();
     //console.log(fecha);
     const mostrarCosto = res.data
       .filter(
         (egreso) =>
-          moment(fecha).format("DD/MM/YYYY") ===
-          moment(egreso.createdAt).format("DD/MM/YYYY")
+          moment().format("DD/MM/YYYY") ===
+          moment(egreso.createdAt).utc().format("DD/MM/YYYY")
       )
       .map((egreso) => egreso.cantidad)
       .reduce((a, b) => a + b, 0);
@@ -77,14 +74,12 @@ const EgresoList = () => {
           updatedAt: egreso.updatedAt ? new Date(egreso.updatedAt) : new Date(),
         };
       })
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .filter(
         (egreso) =>
-          moment(fecha).format("DD/MM/YYYY") ===
-          moment(egreso.createdAt).format("DD/MM/YYYY")
-      )
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    //console.log(moment(fecha).utc().format("DD/MM/YYYY"));
-    //console.log(moment(fecha).format("DD/MM/YYYY"));
+          moment().format("DD/MM/YYYY") ===
+          moment(egreso.createdAt).utc().format("DD/MM/YYYY")
+      );
     setListEgresos(listHoy);
     setLoading(false);
   };
@@ -96,10 +91,6 @@ const EgresoList = () => {
     }
     loadEgresosXadmin(userData.id);
   }, [userData.id, userData.role]);
-
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
 
   if (loading)
     return (

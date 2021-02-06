@@ -55,10 +55,6 @@ const InfoNotasTeoricas = (props: Props) => {
   }, [loadDataAlumno, loadDataAlumnoSegundaOportunidad]);
   //loadPromedio
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <div className="row">

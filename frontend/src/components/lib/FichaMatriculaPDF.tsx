@@ -20,7 +20,6 @@ export async function generatePDF(id: string) {
   const resNot2: any = await notasService.getNotasXAlumnosS(id);
   const resAsis: any = await asistenciaService.getAsistenciaXAlumno(id);
   const resPra: any = await practicasService.getPracticasXAlumno(id);
-
   const doc: any = new jsPDF();
 
   let logo =
@@ -184,14 +183,14 @@ export async function generatePDF(id: string) {
     notas.push([
       String(resNot.data[n].tipoNota),
       String(resNot.data[n].nota),
-      moment(String(resNot.data[n].createdAt)).format("DD/MM/YYYY"),
+      moment(resNot.data[n].createdAt).format("DD/MM/YYYY"),
     ]);
   }
   for (var nn = 0; nn < resNot2.data.length; nn++) {
     notasS.push([
-      String(resNot.data[nn].tipoNota),
-      String(resNot.data[nn].nota),
-      moment(String(resNot.data[nn].createdAt)).format("DD/MM/YYYY"),
+      String(resNot2.data[nn].tipoNota),
+      String(resNot2.data[nn].nota),
+      moment(resNot2.data[nn].createdAt).format("DD/MM/YYYY"),
     ]);
   }
   for (var a = 0; a < resAsis.data.length; a++) {
@@ -207,6 +206,7 @@ export async function generatePDF(id: string) {
     practicas.push([
       String(resPra.data[pr].nro),
       moment(String(resPra.data[pr].fecha))
+        .utc()
         .format("ddd DD/MM/YYYY")
         .toUpperCase(),
       String(resPra.data[pr].horaInicio),
@@ -323,14 +323,25 @@ export async function generatePDFCita(id: string) {
   doc.setFont("helvetica", "normal");
   doc.text(String(res.data.estudiante.nombres), 65, 40);
   doc.setFont("helvetica", "bold");
-  doc.text("CITA: ", 10, 45);
+  doc.text("INICIA CITA: ", 10, 45);
   doc.setFont("helvetica", "normal");
   doc.text(
-    moment(String(res.data.fecha)).format("dddd, DD/MM/YYYY - hh:mm A"),
-    23,
+    moment(String(res.data.fecha))
+      .format("dddd, DD/MM/YYYY - hh:mm A")
+      .toUpperCase(),
+    40,
     45
   );
-
+  doc.setFont("helvetica", "bold");
+  doc.text("TERMINA CITA: ", 10, 50);
+  doc.setFont("helvetica", "normal");
+  doc.text(
+    moment(String(res.data.fechaTermino))
+      .format("dddd, DD/MM/YYYY - hh:mm A")
+      .toUpperCase(),
+    45,
+    50
+  );
   doc.setFont("helvetica", "bold");
   doc.text("SECRETARIA: ", 10, 55);
   doc.setFont("helvetica", "normal");

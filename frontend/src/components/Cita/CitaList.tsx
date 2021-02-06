@@ -14,6 +14,7 @@ const CitaList = () => {
 
   const loadCitas = async () => {
     const res = await citaService.getCitas();
+
     const formatedVideos = res.data
       .map((cita) => {
         return {
@@ -45,10 +46,6 @@ const CitaList = () => {
   useEffect(() => {
     loadCitas();
   }, []);
-
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
 
   return (
     <>
@@ -104,7 +101,10 @@ const CitaList = () => {
                               <th scope="col">COD</th>
                               <th scope="col">Alumno</th>
                               <th scope="col">Secretaria</th>
-                              <th scope="col">Fecha citada</th>
+                              <th scope="col">Fecha Creada</th>
+                              <th scope="col">Fecha Modificada</th>
+                              <th scope="col">Inicia cita</th>
+                              <th scope="col">Termina cita</th>
                               <th scope="col">Acciones</th>
                             </tr>
                           </thead>

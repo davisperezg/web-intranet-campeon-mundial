@@ -19,10 +19,6 @@ const Principal = () => {
 
   //CargaUser();
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <>

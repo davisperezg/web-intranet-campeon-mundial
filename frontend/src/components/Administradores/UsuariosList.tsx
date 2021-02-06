@@ -15,7 +15,6 @@ const AdministradoresList = () => {
 
   const loadAdmin = async () => {
     const res = await adminService.getAdministradores();
-    console.log(res.data);
     const formatedVideos = res.data
       .map((admin) => {
         return {
@@ -52,7 +51,6 @@ const AdministradoresList = () => {
         admin.dni.toLowerCase().indexOf(value) >= 0 ||
         admin.dni.toUpperCase().indexOf(value) >= 0
     );
-    console.log(buscarUsuarios);
     const soloUsers = buscarUsuarios.filter(
       (element: any) =>
         element.roles[0].name === "Super Admin" ||
@@ -65,7 +63,6 @@ const AdministradoresList = () => {
     if (buscarUsuarios.length === 0) {
       console.log("Buscando alumnos...");
     } else {
-      console.log(buscarUsuarios);
       setAdmin(buscarUsuarios);
     }
   };
@@ -73,10 +70,6 @@ const AdministradoresList = () => {
   useEffect(() => {
     loadAdmin();
   }, []);
-
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
 
   if (loading)
     return (

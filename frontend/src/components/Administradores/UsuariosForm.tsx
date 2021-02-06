@@ -34,7 +34,6 @@ const AdministradoresForm = () => {
   const initialState = {
     nombres: "",
     username: "",
-    email: "",
     dni: "",
     cellphone: "",
     sedes: [] || "",
@@ -93,7 +92,6 @@ const AdministradoresForm = () => {
             " " +
             res.data.apellido_materno,
           username: "",
-          email: "",
           dni: admin.dni,
           cellphone: "",
           sedes: "",
@@ -152,18 +150,14 @@ const AdministradoresForm = () => {
             return toast.error("El username ya existe");
           } else if (JSON.parse(e.request.response).keyValue.dni) {
             return toast.error("El D.N.I ya pertenece a un usuario");
-          } else if (JSON.parse(e.request.response).keyValue.email) {
-            return toast.error("El email ya pertenece a un usuario");
           } else if (JSON.parse(e.request.response).keyValue.cellphone) {
             return toast.error("El celular ya pertenece a un usuario");
           }
         } else {
           if (JSON.parse(e.request.response).password) {
-            console.log("wha");
             return toast.error(JSON.parse(e.request.response).password.message);
           }
           if (JSON.parse(e.request.response).errors.dni) {
-            console.log("wha");
             return toast.error(
               JSON.parse(e.request.response).errors.dni.message
             );
@@ -174,10 +168,6 @@ const AdministradoresForm = () => {
           } else if (JSON.parse(e.request.response).errors.username) {
             return toast.error(
               JSON.parse(e.request.response).errors.username.message
-            );
-          } else if (JSON.parse(e.request.response).errors.email) {
-            return toast.error(
-              JSON.parse(e.request.response).errors.email.message
             );
           } else if (JSON.parse(e.request.response).errors.cellphone) {
             return toast.error(
@@ -290,10 +280,6 @@ const AdministradoresForm = () => {
   }, [params.id]);
   //offset-md-8
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   if (params.id) {
     return (
       <div className="row">
@@ -380,7 +366,7 @@ const AdministradoresForm = () => {
                   <input
                     type="email"
                     name="email"
-                    placeholder="Correo electronico"
+                    placeholder="Correo electronico (opcional)"
                     className="form-control"
                     onChange={handleInputChange}
                     value={admin.email}
@@ -584,7 +570,7 @@ const AdministradoresForm = () => {
                 <input
                   type="email"
                   name="email"
-                  placeholder="Correo electronico"
+                  placeholder="Correo electronico (opcional)"
                   className="form-control"
                   onChange={handleInputChange}
                   value={admin.email}

@@ -11,7 +11,6 @@ export default new Strategy(opts, async (payload, done) => {
   const userFound: any = await Users.findOne({
     _id: payload.id,
   }).populate("roles");
-  //console.log(userFound);
   const data = {
     id: userFound._id,
     username: userFound.username,

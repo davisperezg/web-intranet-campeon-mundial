@@ -73,10 +73,6 @@ const VideoForm = () => {
     });
   };
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <div className="row">
       <div className="col-md-4 offset-md-4">

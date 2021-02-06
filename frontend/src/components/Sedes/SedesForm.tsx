@@ -50,10 +50,6 @@ const SedesForm = () => {
     if (params.id) getSede(params.id);
   }, [params.id]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <div className="row">

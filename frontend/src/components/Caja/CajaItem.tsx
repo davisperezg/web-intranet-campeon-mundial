@@ -24,31 +24,7 @@ interface PropsEgreso {
 //<span className="badge badge-success">Success</span>
 export const CajaIngreso = (props: PropsIngreso) => {
   const { pago, loadIngresos, debe, alumnoList }: any = props;
-  //const [edit, setEdit] = useState(true);
   const history = useHistory();
-  /**
-   * const handleEstadoWarning = async (id: string) => {
-      const data: any = {
-        confirm: 2,
-      };
-      await pagoService.updateEstado(id, data);
-      loadIngresos();
-    };
-    const handleEstadoCheck = async (id: string) => {
-      const data: any = {
-        confirm: 1,
-      };
-      await pagoService.updateEstado(id, data);
-      loadIngresos();
-    };
-    const handleEstadoNull = async (id: string) => {
-      const data: any = {
-        confirm: 0,
-      };
-      await pagoService.updateEstado(id, data);
-      loadIngresos();
-    };
-   */
   return (
     <>
       <tr key={pago._id}>

@@ -13,6 +13,8 @@ import * as notasPracticasService from "./NotasPracticaManejoService";
 import { toast } from "react-toastify";
 import { confirmAlert } from "react-confirm-alert"; // Import
 import MostarSesionTerminada from "./../lib/SesionTerminada";
+import * as alumnoService from "../Alumnos/AlumnoService";
+import { Alumno } from "./../Alumnos/Alumno";
 
 interface Params {
   id?: string;
@@ -24,7 +26,7 @@ type SelectChange = ChangeEvent<HTMLSelectElement>;
 const NotasFormPM = () => {
   const { userData }: any = useContext(UserContext);
   const params = useParams<Params>();
-
+  const [alumno, setAlumno]: any = useState([]);
   const initialvalue = {
     etapa: "ETAPA1 FASEA",
     estadoAlumno: "APROBADO",
@@ -32,6 +34,10 @@ const NotasFormPM = () => {
     estudiante: String(params.id),
   };
 
+  const getAlumno = async (id: string) => {
+    const res: any = await alumnoService.getAlumno(id);
+    setAlumno(res.data);
+  };
   const history = useHistory();
 
   const [nota, setNota] = useState<NotasPracticaManejo>(initialvalue);
@@ -81,12 +87,9 @@ const NotasFormPM = () => {
   };
 
   useEffect(() => {
+    if (params.id) getAlumno(params.id);
     setNota({ ...nota, registrador: userData.id });
-  }, [userData.id]);
-
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
+  }, [params.id, userData.id]);
 
   return (
     <>
@@ -94,7 +97,7 @@ const NotasFormPM = () => {
         <div className="col-sm-12">
           <div className="card">
             <div className="card-header">
-              Notas de manejo
+              Notas de manejo de <strong>{alumno.nombres}</strong>
               <GoArrowLeft
                 className="offset-md-11 offset-sm-11"
                 onClick={() => {

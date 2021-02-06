@@ -26,10 +26,6 @@ const InfoAsistencia = (props: Props) => {
     loadAsistencias();
   }, [loadAsistencias]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <div className="row">

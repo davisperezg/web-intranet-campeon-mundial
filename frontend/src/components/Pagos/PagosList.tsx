@@ -65,9 +65,6 @@ const PagosList = () => {
       </div>
     );
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
   //if (pagos.length === 0) return <div>No hay pagos publicados.</div>;
 
   return (
@@ -79,7 +76,10 @@ const PagosList = () => {
             <br />
             <br />
             {pagos.length === 0 ? (
-              <>No hay pagos publicados.</>
+              <>
+                No hay pagos publicados.
+                <br /> <br />
+              </>
             ) : (
               <>
                 <div className="table-responsive">

@@ -32,6 +32,7 @@ const CitaForm = () => {
     estudiante: "NOSELECT",
     registrador: userData.id,
     fecha: new Date(),
+    fechaTermino: new Date(),
   };
 
   const history = useHistory();
@@ -49,8 +50,8 @@ const CitaForm = () => {
 
   const getCita = async (id: string) => {
     const res = await citaService.getCitaById(id);
-    const { fecha, registrador, estudiante } = res.data;
-    setCita({ fecha, registrador, estudiante });
+    const { fecha, registrador, estudiante, fechaTermino } = res.data;
+    setCita({ fecha, registrador, estudiante, fechaTermino });
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -89,10 +90,6 @@ const CitaForm = () => {
     loadAlumnos();
   }, [params.id, userData.id]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <div className="row">
@@ -113,8 +110,8 @@ const CitaForm = () => {
             </div>
             <div className="card-body">
               <form onSubmit={handleSubmit}>
-                <div className="col-sm-12">
-                  <div className="form-group">
+                <div className="form-row">
+                  <div className="form-group col-md-12">
                     <select
                       autoFocus={true}
                       name="estudiante"
@@ -132,8 +129,10 @@ const CitaForm = () => {
                     </select>
                   </div>
                 </div>
-                <div className="col-sm-12">
-                  <div className="form-group">
+                <div className="form-row">
+                  <div className="form-group col-sm-6">
+                    <label htmlFor="inputEndClasses">Inicia</label>
+
                     <input
                       type="datetime-local"
                       name="fecha"
@@ -142,26 +141,38 @@ const CitaForm = () => {
                       value={moment(cita.fecha).format("YYYY-MM-DDTkk:mm")}
                     />
                   </div>
+                  <div className="form-group col-sm-6">
+                    <label htmlFor="inputEndClasses">Termina</label>
+
+                    <input
+                      type="datetime-local"
+                      name="fechaTermino"
+                      className="form-control"
+                      onChange={handleInputChange}
+                      value={moment(cita.fechaTermino).format(
+                        "YYYY-MM-DDTkk:mm"
+                      )}
+                    />
+                  </div>
                 </div>
-                <div className="col-sm-12">
-                  {params.id ? (
-                    <button
-                      type="submit"
-                      className="btn btn-info"
-                      style={{ width: "100%" }}
-                    >
-                      Actualizar
-                    </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                      style={{ width: "100%" }}
-                    >
-                      Guardar
-                    </button>
-                  )}
-                </div>
+
+                {params.id ? (
+                  <button
+                    style={{ width: "100%" }}
+                    type="submit"
+                    className="btn btn-info"
+                  >
+                    Actualizar
+                  </button>
+                ) : (
+                  <button
+                    style={{ width: "100%" }}
+                    type="submit"
+                    className="btn btn-primary"
+                  >
+                    Guardar
+                  </button>
+                )}
               </form>
             </div>
           </div>

@@ -23,10 +23,6 @@ const InformacionIndex = () => {
     setIsActivatePracticaManejo,
   ] = useState<Boolean>(false);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       {isActivatePrincipal ? (

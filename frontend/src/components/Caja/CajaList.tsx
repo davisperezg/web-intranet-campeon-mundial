@@ -1022,10 +1022,6 @@ const CajaList = () => {
     loadFiltro();
   }, [loadFiltro]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <div className="card">

@@ -27,13 +27,12 @@ const userSchema = new Schema(
       trim: true,
       uppercase: true,
     },
-    email: {
+
+    facebook: {
       type: String,
-      unique: true,
-      required: [true, "Completar correo"],
       trim: true,
-      uppercase: true,
     },
+
     password: {
       type: String,
       //required: [true, "Completar password"],

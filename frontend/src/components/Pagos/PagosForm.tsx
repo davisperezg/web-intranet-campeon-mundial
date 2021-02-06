@@ -3,6 +3,7 @@ import React, {
   ChangeEvent,
   useEffect,
   FormEvent,
+  useCallback,
   useState,
 } from "react";
 import { GoSync } from "react-icons/go";
@@ -19,6 +20,7 @@ import TramiteItem from "./../Alumnos/TramiteItem";
 import * as alumnoService from "../Alumnos/AlumnoService";
 import { PagoContext } from "../Context/PagoContext";
 import MostarSesionTerminada from "../lib/SesionTerminada";
+import { numberFormat } from "./../lib/index";
 
 type InputChange = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 type SelectChange = ChangeEvent<HTMLSelectElement>;
@@ -36,6 +38,8 @@ const PagosForm = (props: Props) => {
   const params: any = useParams<Params>();
   const { userData }: any = useContext(UserContext);
   const { edit, setEdit }: any = useContext(PagoContext);
+  const [total, setTotal] = useState<Number>(0);
+  const [resta, setResta] = useState<Number>(0);
 
   const initialState = {
     cantidad: 1,
@@ -123,17 +127,26 @@ const PagosForm = (props: Props) => {
       setPagado(false);
     }
   };
+  const calcTotal = useCallback(async () => {
+    const res: any = await alumnoService.getTramites();
+    const tramite = res.data
+      .filter((tramite: any) => tramite.name === pago.tramites)
+      .map((item: any) => item.costo);
+    let sumaTotal = Number(tramite) * Number(pago.cantidad);
+    let restaTotal = Number(pago.acuenta)
+      ? sumaTotal - Number(pago.acuenta)
+      : 0;
+    setTotal(sumaTotal);
+    setResta(restaTotal);
+  }, [pago.tramites, pago.cantidad, pago.acuenta]);
 
   useEffect(() => {
+    calcTotal();
     loadPagos();
     getTramites();
     setPago({ ...pago, registrador: userData.id });
     if (params.idpago) getPago(params.idpago);
-  }, [params.idpago, userData.id]);
-
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
+  }, [calcTotal, params.idpago, userData.id]);
 
   return (
     <>
@@ -343,7 +356,32 @@ const PagosForm = (props: Props) => {
                         value={Number(pago.cantidad)}
                       />
                     </div>
-
+                    <div className="form-group">
+                      <label htmlFor="exampleSelect1">Total</label>
+                      <input
+                        type="text"
+                        placeholder="Buscar tramite"
+                        className="form-control"
+                        disabled={true}
+                        //onChange={handleInputChangePago}
+                        value={numberFormat(Number(total))}
+                      />
+                    </div>
+                    <div className="form-group col-md-4">
+                      <label htmlFor="exampleSelect1">Resta</label>
+                      <input
+                        type="text"
+                        placeholder="Buscar tramite"
+                        className="form-control"
+                        disabled={true}
+                        //onChange={handleInputChangePago}
+                        value={
+                          Number(resta) < 0
+                            ? "El monto a cuenta no puede ser mayor al TOTAL"
+                            : numberFormat(Number(resta))
+                        }
+                      />
+                    </div>
                     <div className="form-group col-md-6">
                       <label htmlFor="exampleSelect1">Nº Recibo</label>
                       <input

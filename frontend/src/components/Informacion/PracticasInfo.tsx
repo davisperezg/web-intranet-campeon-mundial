@@ -25,10 +25,6 @@ const InfoPractica = (props: Props) => {
     loadPracticas();
   }, [loadPracticas]);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   return (
     <>
       <div className="row">

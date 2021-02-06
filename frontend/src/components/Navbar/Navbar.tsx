@@ -47,6 +47,7 @@ const Navbar = () => {
     deleteToken();
     deleteRefreshToken();
     localStorage.removeItem("username");
+    localStorage.removeItem("usuarioRegistro");
     history.push("/login");
   };
 
@@ -109,6 +110,11 @@ const Navbar = () => {
                           <li className="nav-item">
                             <Link className="nav-link" to="/tramites">
                               Tramite
+                            </Link>
+                          </li>
+                          <li className="nav-item">
+                            <Link className="nav-link" to="/citas">
+                              Verificar citas
                             </Link>
                           </li>
                         </ul>

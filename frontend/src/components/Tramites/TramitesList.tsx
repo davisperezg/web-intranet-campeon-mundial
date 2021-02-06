@@ -26,10 +26,6 @@ const TramiteList = () => {
     loadSedes();
   }, []);
 
-  if (userData.state === false) {
-    return <MostarSesionTerminada />;
-  }
-
   if (loading)
     return (
       <div className="row">
