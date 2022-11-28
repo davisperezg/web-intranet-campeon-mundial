@@ -63,5 +63,5 @@ Sistema intranet. se implementó con el objetivo de optimizar el proceso de matr
 
 # Pruebas, pdf que genera el sistema.
 
-- https://images-campeon-mundial.s3-sa-east-1.amazonaws.com/TESTPDF/CITA_DAVIS+KEINER+PEREZ+GUZMAN_COD_246.pdf
-- https://images-campeon-mundial.s3-sa-east-1.amazonaws.com/TESTPDF/FICHA_MATRICULA_246_DAVIS+KEINER+PEREZ+GUZMAN+(25).pdf
+- https://drive.google.com/file/d/1ApO63q8lexHjKhae6ynAXicjk5hOQmfz/view?usp=share_link
+- https://drive.google.com/file/d/1EqRAr9a7vnmCpc9iM_JVUCafXi1fyw9_/view?usp=share_link
